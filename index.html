@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Session Pay</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      color: #222;
+    }
+
+    .app {
+      max-width: 480px;
+      margin: auto;
+      min-height: 100vh;
+      background: white;
+      padding: 20px;
+    }
+
+    h1 {
+      margin-bottom: 5px;
+    }
+
+    .month {
+      color: #666;
+      margin-bottom: 25px;
+    }
+
+    .summary {
+      background: #f0f4f8;
+      padding: 18px;
+      border-radius: 14px;
+      margin-bottom: 25px;
+    }
+
+    .summary h2 {
+      margin-top: 0;
+    }
+
+    .numbers {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .number {
+      background: white;
+      padding: 12px;
+      border-radius: 10px;
+    }
+
+    .number strong {
+      display: block;
+      font-size: 20px;
+      margin-top: 5px;
+    }
+
+    .client {
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      padding: 15px;
+      margin-bottom: 12px;
+    }
+
+    .client h3 {
+      margin: 0 0 8px 0;
+    }
+
+    .client p {
+      margin: 4px 0;
+      color: #555;
+    }
+
+    .open {
+      font-weight: bold;
+    }
+
+    .add-session {
+      width: 100%;
+      border: none;
+      border-radius: 12px;
+      padding: 16px;
+      font-size: 17px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 15px;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="app">
+
+  <h1>Session Pay</h1>
+  <div class="month">Agosto 2026</div>
+
+  <section class="summary">
+
+    <h2>Resumo do mês</h2>
+
+    <div class="numbers">
+
+      <div class="number">
+        Sessões
+        <strong>18</strong>
+      </div>
+
+      <div class="number">
+        Total
+        <strong>R$ 2.400</strong>
+      </div>
+
+      <div class="number">
+        Pago
+        <strong>R$ 1.700</strong>
+      </div>
+
+      <div class="number">
+        Em aberto
+        <strong>R$ 700</strong>
+      </div>
+
+    </div>
+
+  </section>
+
+  <h2>Alunos</h2>
+
+  <div class="client">
+    <h3>Maria</h3>
+    <p>8 sessões • R$ 800</p>
+    <p>Pagamento mensal</p>
+    <p>Pago ✓</p>
+  </div>
+
+  <div class="client">
+    <h3>Carlos</h3>
+    <p>6 sessões • R$ 900</p>
+    <p>Pagamento por sessão</p>
+    <p class="open">R$ 300 em aberto</p>
+  </div>
+
+  <div class="client">
+    <h3>Ana</h3>
+    <p>Pacote: 10 sessões</p>
+    <p>6 utilizadas • 4 restantes</p>
+  </div>
+
+  <button class="add-session">
+    + Registrar sessão
+  </button>
+
+</div>
+
+</body>
+</html>

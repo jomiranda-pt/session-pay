@@ -6,9 +6,7 @@
   <title>Session Pay</title>
 
   <style>
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
@@ -25,13 +23,11 @@
       padding: 20px;
     }
 
-    h1 {
-      margin-bottom: 5px;
-    }
+    h1 { margin-bottom: 5px; }
 
     .month {
       color: #666;
-      margin-bottom: 25px;
+      margin-bottom: 20px;
     }
 
     .summary {
@@ -41,9 +37,7 @@
       margin-bottom: 25px;
     }
 
-    .summary h2 {
-      margin-top: 0;
-    }
+    .summary h2 { margin-top: 0; }
 
     .numbers {
       display: grid;
@@ -79,19 +73,47 @@
       color: #555;
     }
 
-    .open {
-      font-weight: bold;
-    }
-
-    .add-session {
+    button {
       width: 100%;
       border: none;
       border-radius: 12px;
-      padding: 16px;
-      font-size: 17px;
+      padding: 15px;
+      font-size: 16px;
       font-weight: bold;
       cursor: pointer;
+      margin-top: 12px;
+    }
+
+    .form-box {
+      display: none;
+      margin-top: 20px;
+      padding: 18px;
+      border: 1px solid #ddd;
+      border-radius: 14px;
+      background: #fafafa;
+    }
+
+    label {
+      display: block;
+      margin-top: 12px;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ccc;
+      border-radius: 9px;
+      font-size: 16px;
+    }
+
+    .success {
+      display: none;
       margin-top: 15px;
+      padding: 12px;
+      border-radius: 10px;
+      background: #eef7ee;
     }
   </style>
 </head>
@@ -104,62 +126,185 @@
   <div class="month">Agosto 2026</div>
 
   <section class="summary">
-
     <h2>Resumo do mês</h2>
 
     <div class="numbers">
-
       <div class="number">
         Sessões
-        <strong>18</strong>
+        <strong id="totalSessoes">0</strong>
       </div>
 
       <div class="number">
         Total
-        <strong>R$ 2.400</strong>
+        <strong id="totalValor">R$ 0</strong>
       </div>
 
       <div class="number">
         Pago
-        <strong>R$ 1.700</strong>
+        <strong id="totalPago">R$ 0</strong>
       </div>
 
       <div class="number">
         Em aberto
-        <strong>R$ 700</strong>
+        <strong id="totalAberto">R$ 0</strong>
       </div>
-
     </div>
-
   </section>
 
   <h2>Alunos</h2>
 
   <div class="client">
     <h3>Maria</h3>
-    <p>8 sessões • R$ 800</p>
+    <p>Valor da sessão: R$ 100</p>
     <p>Pagamento mensal</p>
-    <p>Pago ✓</p>
   </div>
 
   <div class="client">
     <h3>Carlos</h3>
-    <p>6 sessões • R$ 900</p>
+    <p>Valor da sessão: R$ 150</p>
     <p>Pagamento por sessão</p>
-    <p class="open">R$ 300 em aberto</p>
   </div>
 
   <div class="client">
     <h3>Ana</h3>
-    <p>Pacote: 10 sessões</p>
-    <p>6 utilizadas • 4 restantes</p>
+    <p>Pacote de 10 sessões</p>
+    <p>Valor por sessão para teste: R$ 90</p>
   </div>
 
-  <button class="add-session">
+  <button onclick="abrirFormulario()">
     + Registrar sessão
   </button>
 
+  <div class="form-box" id="formSessao">
+
+    <h2>Nova sessão</h2>
+
+    <label>Aluno</label>
+    <select id="aluno">
+      <option value="Maria">Maria</option>
+      <option value="Carlos">Carlos</option>
+      <option value="Ana">Ana</option>
+    </select>
+
+    <label>Data</label>
+    <input type="date" id="data">
+
+    <label>Status</label>
+    <select id="status">
+      <option value="realizada">Realizada</option>
+      <option value="falta">Falta</option>
+      <option value="cancelada">Cancelada</option>
+    </select>
+
+    <label>Cobrar?</label>
+    <select id="cobrar">
+      <option value="sim">Sim</option>
+      <option value="nao">Não</option>
+    </select>
+
+    <label>Pagamento</label>
+    <select id="pagamento">
+      <option value="aberto">Em aberto</option>
+      <option value="pago">Pago</option>
+    </select>
+
+    <button onclick="salvarSessao()">
+      Salvar sessão
+    </button>
+
+    <div class="success" id="mensagem">
+      Sessão registrada ✓
+    </div>
+
+  </div>
+
 </div>
+
+<script>
+
+  const valores = {
+    Maria: 100,
+    Carlos: 150,
+    Ana: 90
+  };
+
+  let sessoes = JSON.parse(localStorage.getItem("sessoes")) || [];
+
+  function abrirFormulario() {
+    document.getElementById("formSessao").style.display = "block";
+
+    if (!document.getElementById("data").value) {
+      const hoje = new Date();
+      document.getElementById("data").value =
+        hoje.toISOString().split("T")[0];
+    }
+  }
+
+  function salvarSessao() {
+
+    const aluno = document.getElementById("aluno").value;
+    const data = document.getElementById("data").value;
+    const status = document.getElementById("status").value;
+    const cobrar = document.getElementById("cobrar").value;
+    const pagamento = document.getElementById("pagamento").value;
+
+    let valor = 0;
+
+    if (cobrar === "sim") {
+      valor = valores[aluno];
+    }
+
+    const sessao = {
+      aluno,
+      data,
+      status,
+      cobrar,
+      pagamento,
+      valor
+    };
+
+    sessoes.push(sessao);
+
+    localStorage.setItem("sessoes", JSON.stringify(sessoes));
+
+    document.getElementById("mensagem").style.display = "block";
+
+    atualizarResumo();
+  }
+
+  function atualizarResumo() {
+
+    let totalValor = 0;
+    let totalPago = 0;
+    let totalAberto = 0;
+
+    sessoes.forEach(sessao => {
+
+      totalValor += sessao.valor;
+
+      if (sessao.pagamento === "pago") {
+        totalPago += sessao.valor;
+      } else {
+        totalAberto += sessao.valor;
+      }
+
+    });
+
+    document.getElementById("totalSessoes").textContent = sessoes.length;
+
+    document.getElementById("totalValor").textContent =
+      "R$ " + totalValor.toFixed(2).replace(".", ",");
+
+    document.getElementById("totalPago").textContent =
+      "R$ " + totalPago.toFixed(2).replace(".", ",");
+
+    document.getElementById("totalAberto").textContent =
+      "R$ " + totalAberto.toFixed(2).replace(".", ",");
+  }
+
+  atualizarResumo();
+
+</script>
 
 </body>
 </html>

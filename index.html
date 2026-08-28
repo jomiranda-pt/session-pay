@@ -231,7 +231,10 @@
     </div>
 
   </div>
-
+  
+<button class="secondary" onclick="limparDadosTeste()">
+  Limpar dados de teste
+</button>
   <button onclick="abrirFormulario()">
     + Registrar sessão
   </button>
@@ -380,6 +383,28 @@ valorPacote
 
     document.getElementById("mensagemAluno").style.display = "block";
 
+    function limparDadosTeste() {
+
+  const confirmar = confirm(
+    "Deseja apagar todos os alunos e sessões cadastrados neste navegador?"
+  );
+
+  if (!confirmar) {
+    return;
+  }
+
+  alunos = [];
+  sessoes = [];
+
+  localStorage.removeItem("alunos");
+  localStorage.removeItem("sessoes");
+
+  atualizarAlunos();
+  atualizarResumo();
+
+  alert("Dados de teste apagados.");
+}
+    
     atualizarAlunos();
     atualizarResumo();
   }

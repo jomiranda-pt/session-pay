@@ -23,7 +23,9 @@
       padding: 20px;
     }
 
-    h1 { margin-bottom: 5px; }
+    h1 {
+      margin-bottom: 5px;
+    }
 
     .month {
       color: #666;
@@ -37,7 +39,9 @@
       margin-bottom: 25px;
     }
 
-    .summary h2 { margin-top: 0; }
+    .summary h2 {
+      margin-top: 0;
+    }
 
     .numbers {
       display: grid;
@@ -107,7 +111,8 @@
       font-weight: bold;
     }
 
-    input, select {
+    input,
+    select {
       width: 100%;
       padding: 12px;
       border: 1px solid #ccc;
@@ -122,10 +127,6 @@
       border-radius: 10px;
       background: #eef7ee;
     }
-
-    .package-fields {
-      display: none;
-    }
   </style>
 </head>
 
@@ -137,6 +138,7 @@
   <div class="month">Controle de sessões e pagamentos</div>
 
   <section class="summary">
+
     <h2>Resumo</h2>
 
     <div class="numbers">
@@ -167,6 +169,7 @@
       </div>
 
     </div>
+
   </section>
 
   <h2>Alunos</h2>
@@ -182,43 +185,77 @@
     <h2>Novo aluno</h2>
 
     <label>Nome</label>
-    <input type="text" id="nomeAluno" placeholder="Nome do aluno">
+    <input
+      type="text"
+      id="nomeAluno"
+      placeholder="Nome do aluno"
+    >
 
     <label>Forma de cobrança</label>
-<select id="tipoCobranca" onchange="mostrarCamposCobranca()">
-  <option value="sessao">Por sessão</option>
-  <option value="quinzenal">Quinzenal</option>
-  <option value="mensal">Mensal</option>
-  <option value="pacote">Pacote</option>
-</select>
+
+    <select
+      id="tipoCobranca"
+      onchange="mostrarCamposCobranca()"
+    >
+      <option value="sessao">Por sessão</option>
+      <option value="quinzenal">Quinzenal</option>
+      <option value="mensal">Mensal</option>
+      <option value="pacote">Pacote</option>
+    </select>
 
     <div id="campoSessao">
 
       <label>Valor da sessão</label>
-      <input type="number" id="valorSessao" placeholder="Ex.: 100">
+
+      <input
+        type="number"
+        id="valorSessao"
+        placeholder="Ex.: 100"
+      >
 
     </div>
-    
-<div id="campoQuinzenal" style="display:none">
 
-  <label>Valor quinzenal</label>
-  <input type="number" id="valorQuinzenal" placeholder="Ex.: 350">
+    <div id="campoQuinzenal" style="display:none">
 
-</div>
+      <label>Valor quinzenal</label>
+
+      <input
+        type="number"
+        id="valorQuinzenal"
+        placeholder="Ex.: 350"
+      >
+
+    </div>
+
     <div id="campoMensal" style="display:none">
 
       <label>Valor mensal</label>
-      <input type="number" id="valorMensal" placeholder="Ex.: 700">
+
+      <input
+        type="number"
+        id="valorMensal"
+        placeholder="Ex.: 700"
+      >
 
     </div>
 
-    <div id="campoPacote" class="package-fields">
+    <div id="campoPacote" style="display:none">
 
       <label>Quantidade de sessões no pacote</label>
-      <input type="number" id="quantidadePacote" placeholder="Ex.: 10">
+
+      <input
+        type="number"
+        id="quantidadePacote"
+        placeholder="Ex.: 10"
+      >
 
       <label>Valor total do pacote</label>
-      <input type="number" id="valorPacote" placeholder="Ex.: 900">
+
+      <input
+        type="number"
+        id="valorPacote"
+        placeholder="Ex.: 900"
+      >
 
     </div>
 
@@ -231,10 +268,11 @@
     </div>
 
   </div>
-  
-<button class="secondary" onclick="limparDadosTeste()">
-  Limpar dados de teste
-</button>
+
+  <button class="secondary" onclick="limparDadosTeste()">
+    Limpar dados de teste
+  </button>
+
   <button onclick="abrirFormulario()">
     + Registrar sessão
   </button>
@@ -250,6 +288,7 @@
     <input type="date" id="data">
 
     <label>Status</label>
+
     <select id="status">
       <option value="realizada">Realizada</option>
       <option value="falta">Falta</option>
@@ -257,12 +296,14 @@
     </select>
 
     <label>Cobrar?</label>
+
     <select id="cobrar">
       <option value="sim">Sim</option>
       <option value="nao">Não</option>
     </select>
 
     <label>Pagamento</label>
+
     <select id="pagamento">
       <option value="aberto">Em aberto</option>
       <option value="pago">Pago</option>
@@ -282,140 +323,211 @@
 
 <script>
 
-  let alunos = JSON.parse(localStorage.getItem("alunos")) || [];
-  let sessoes = JSON.parse(localStorage.getItem("sessoes")) || [];
+  let alunos =
+    JSON.parse(localStorage.getItem("alunos")) || [];
+
+  let sessoes =
+    JSON.parse(localStorage.getItem("sessoes")) || [];
+
 
   function abrirCadastroAluno() {
-    document.getElementById("formAluno").style.display = "block";
+
+    document.getElementById("formAluno").style.display =
+      "block";
+
   }
+
 
   function mostrarCamposCobranca() {
 
-    const tipo = document.getElementById("tipoCobranca").value;
+    const tipo =
+      document.getElementById("tipoCobranca").value;
 
-    document.getElementById("campoSessao").style.display = "none";
-    document.getElementById("campoQuinzenal").style.display = "none";
-    document.getElementById("campoMensal").style.display = "none";
-    document.getElementById("campoPacote").style.display = "none";
+    document.getElementById("campoSessao").style.display =
+      "none";
+
+    document.getElementById("campoQuinzenal").style.display =
+      "none";
+
+    document.getElementById("campoMensal").style.display =
+      "none";
+
+    document.getElementById("campoPacote").style.display =
+      "none";
+
 
     if (tipo === "sessao") {
-      document.getElementById("campoSessao").style.display = "block";
+
+      document.getElementById("campoSessao").style.display =
+        "block";
+
     }
-    
+
+
     if (tipo === "quinzenal") {
-  document.getElementById("campoQuinzenal").style.display = "block";
-}
+
+      document.getElementById("campoQuinzenal").style.display =
+        "block";
+
+    }
+
 
     if (tipo === "mensal") {
-      document.getElementById("campoMensal").style.display = "block";
+
+      document.getElementById("campoMensal").style.display =
+        "block";
+
     }
 
+
     if (tipo === "pacote") {
-      document.getElementById("campoPacote").style.display = "block";
+
+      document.getElementById("campoPacote").style.display =
+        "block";
+
     }
+
   }
+
 
   function salvarAluno() {
 
-    const nome = document.getElementById("nomeAluno").value.trim();
-    const tipo = document.getElementById("tipoCobranca").value;
+    const nome =
+      document.getElementById("nomeAluno").value.trim();
+
+    const tipo =
+      document.getElementById("tipoCobranca").value;
+
 
     if (!nome) {
+
       alert("Digite o nome do aluno.");
+
       return;
+
     }
+
 
     let valorSessao = 0;
-let valorQuinzenal = 0;
-let valorMensal = 0;
-let quantidadePacote = 0;
-let valorPacote = 0;
+    let valorQuinzenal = 0;
+    let valorMensal = 0;
+    let quantidadePacote = 0;
+    let valorPacote = 0;
+
 
     if (tipo === "sessao") {
+
       valorSessao =
-        Number(document.getElementById("valorSessao").value);
+        Number(
+          document.getElementById("valorSessao").value
+        );
+
     }
-    
-if (tipo === "quinzenal") {
-  valorQuinzenal =
-    Number(document.getElementById("valorQuinzenal").value);
-}
-    
+
+
+    if (tipo === "quinzenal") {
+
+      valorQuinzenal =
+        Number(
+          document.getElementById("valorQuinzenal").value
+        );
+
+    }
+
+
     if (tipo === "mensal") {
+
       valorMensal =
-        Number(document.getElementById("valorMensal").value);
+        Number(
+          document.getElementById("valorMensal").value
+        );
+
     }
+
 
     if (tipo === "pacote") {
 
       quantidadePacote =
-        Number(document.getElementById("quantidadePacote").value);
+        Number(
+          document.getElementById("quantidadePacote").value
+        );
 
       valorPacote =
-        Number(document.getElementById("valorPacote").value);
+        Number(
+          document.getElementById("valorPacote").value
+        );
 
       if (quantidadePacote > 0) {
-        valorSessao = valorPacote / quantidadePacote;
+
+        valorSessao =
+          valorPacote / quantidadePacote;
+
       }
+
     }
 
+
     const aluno = {
+
       id: Date.now(),
-nome,
-tipo,
-valorSessao,
-valorQuinzenal,
-valorMensal,
-quantidadePacote,
-valorPacote
-  };
+
+      nome,
+      tipo,
+      valorSessao,
+      valorQuinzenal,
+      valorMensal,
+      quantidadePacote,
+      valorPacote
+
+    };
+
 
     alunos.push(aluno);
 
-    localStorage.setItem("alunos", JSON.stringify(alunos));
+
+    localStorage.setItem(
+      "alunos",
+      JSON.stringify(alunos)
+    );
+
 
     document.getElementById("nomeAluno").value = "";
+
     document.getElementById("valorSessao").value = "";
+
     document.getElementById("valorQuinzenal").value = "";
+
     document.getElementById("valorMensal").value = "";
+
     document.getElementById("quantidadePacote").value = "";
+
     document.getElementById("valorPacote").value = "";
 
-    document.getElementById("mensagemAluno").style.display = "block";
 
-    function limparDadosTeste() {
+    document.getElementById("mensagemAluno").style.display =
+      "block";
 
-  const confirmar = confirm(
-    "Deseja apagar todos os alunos e sessões cadastrados neste navegador?"
-  );
 
-  if (!confirmar) {
-    return;
-  }
-
-  alunos = [];
-  sessoes = [];
-
-  localStorage.removeItem("alunos");
-  localStorage.removeItem("sessoes");
-
-  atualizarAlunos();
-  atualizarResumo();
-
-  alert("Dados de teste apagados.");
-}
-    
     atualizarAlunos();
+
     atualizarResumo();
+
   }
+
 
   function atualizarAlunos() {
 
-    const lista = document.getElementById("listaAlunos");
-    const select = document.getElementById("aluno");
+    const lista =
+      document.getElementById("listaAlunos");
+
+    const select =
+      document.getElementById("aluno");
+
 
     lista.innerHTML = "";
+
     select.innerHTML = "";
+
 
     if (alunos.length === 0) {
 
@@ -426,60 +538,90 @@ valorPacote
         "<option>Cadastre um aluno primeiro</option>";
 
       return;
+
     }
+
 
     alunos.forEach(aluno => {
 
-      const card = document.createElement("div");
-      card.className = "client";
+      const card =
+        document.createElement("div");
+
+      card.className =
+        "client";
+
 
       let descricao = "";
+
 
       if (aluno.tipo === "sessao") {
 
         descricao =
           "R$ " +
-          aluno.valorSessao.toFixed(2).replace(".", ",") +
+          aluno.valorSessao
+            .toFixed(2)
+            .replace(".", ",") +
           " por sessão";
 
       }
-      
-if (aluno.tipo === "quinzenal") {
 
-  descricao =
-    "R$ " +
-    aluno.valorQuinzenal.toFixed(2).replace(".", ",") +
-    " por quinzena";
 
-}
+      if (aluno.tipo === "quinzenal") {
+
+        descricao =
+          "R$ " +
+          aluno.valorQuinzenal
+            .toFixed(2)
+            .replace(".", ",") +
+          " por quinzena";
+
+      }
+
+
       if (aluno.tipo === "mensal") {
 
         descricao =
           "R$ " +
-          aluno.valorMensal.toFixed(2).replace(".", ",") +
+          aluno.valorMensal
+            .toFixed(2)
+            .replace(".", ",") +
           " por mês";
 
       }
+
 
       if (aluno.tipo === "pacote") {
 
         descricao =
           aluno.quantidadePacote +
           " sessões — R$ " +
-          aluno.valorPacote.toFixed(2).replace(".", ",");
+          aluno.valorPacote
+            .toFixed(2)
+            .replace(".", ",");
 
       }
 
+
       card.innerHTML =
-        "<h3>" + aluno.nome + "</h3>" +
-        "<p>" + descricao + "</p>";
+        "<h3>" +
+        aluno.nome +
+        "</h3>" +
+        "<p>" +
+        descricao +
+        "</p>";
+
 
       lista.appendChild(card);
 
-      const option = document.createElement("option");
 
-      option.value = aluno.id;
-      option.textContent = aluno.nome;
+      const option =
+        document.createElement("option");
+
+      option.value =
+        aluno.id;
+
+      option.textContent =
+        aluno.nome;
 
       select.appendChild(option);
 
@@ -487,37 +629,57 @@ if (aluno.tipo === "quinzenal") {
 
   }
 
+
   function abrirFormulario() {
 
     if (alunos.length === 0) {
+
       alert("Cadastre um aluno primeiro.");
+
       return;
+
     }
 
-    document.getElementById("formSessao").style.display = "block";
+
+    document.getElementById("formSessao").style.display =
+      "block";
+
 
     if (!document.getElementById("data").value) {
 
-      const hoje = new Date();
+      const hoje =
+        new Date();
 
       document.getElementById("data").value =
         hoje.toISOString().split("T")[0];
 
     }
+
   }
+
 
   function salvarSessao() {
 
     const alunoId =
-      Number(document.getElementById("aluno").value);
+      Number(
+        document.getElementById("aluno").value
+      );
+
 
     const aluno =
-      alunos.find(a => a.id === alunoId);
+      alunos.find(
+        a => a.id === alunoId
+      );
+
 
     if (!aluno) {
+
       alert("Selecione um aluno.");
+
       return;
+
     }
+
 
     const data =
       document.getElementById("data").value;
@@ -531,26 +693,39 @@ if (aluno.tipo === "quinzenal") {
     const pagamento =
       document.getElementById("pagamento").value;
 
+
     let valor = 0;
+
 
     if (cobrar === "sim") {
 
       if (aluno.tipo === "sessao") {
-        valor = aluno.valorSessao;
+
+        valor =
+          aluno.valorSessao;
+
       }
 
+
       if (aluno.tipo === "pacote") {
-        valor = aluno.valorSessao;
+
+        valor =
+          aluno.valorSessao;
+
       }
 
     }
+
 
     const sessao = {
 
       id: Date.now(),
 
-      alunoId: aluno.id,
-      alunoNome: aluno.nome,
+      alunoId:
+        aluno.id,
+
+      alunoNome:
+        aluno.nome,
 
       data,
       status,
@@ -560,18 +735,24 @@ if (aluno.tipo === "quinzenal") {
 
     };
 
+
     sessoes.push(sessao);
+
 
     localStorage.setItem(
       "sessoes",
       JSON.stringify(sessoes)
     );
 
+
     document.getElementById("mensagemSessao").style.display =
       "block";
 
+
     atualizarResumo();
+
   }
+
 
   function atualizarResumo() {
 
@@ -579,43 +760,102 @@ if (aluno.tipo === "quinzenal") {
     let totalPago = 0;
     let totalAberto = 0;
 
+
     sessoes.forEach(sessao => {
 
-      totalValor += Number(sessao.valor || 0);
+      totalValor +=
+        Number(
+          sessao.valor || 0
+        );
+
 
       if (sessao.pagamento === "pago") {
 
-        totalPago += Number(sessao.valor || 0);
+        totalPago +=
+          Number(
+            sessao.valor || 0
+          );
 
       } else {
 
-        totalAberto += Number(sessao.valor || 0);
+        totalAberto +=
+          Number(
+            sessao.valor || 0
+          );
 
       }
 
     });
 
+
     document.getElementById("totalAlunos").textContent =
       alunos.length;
+
 
     document.getElementById("totalSessoes").textContent =
       sessoes.length;
 
+
     document.getElementById("totalValor").textContent =
       "R$ " +
-      totalValor.toFixed(2).replace(".", ",");
+      totalValor
+        .toFixed(2)
+        .replace(".", ",");
+
 
     document.getElementById("totalPago").textContent =
       "R$ " +
-      totalPago.toFixed(2).replace(".", ",");
+      totalPago
+        .toFixed(2)
+        .replace(".", ",");
+
 
     document.getElementById("totalAberto").textContent =
       "R$ " +
-      totalAberto.toFixed(2).replace(".", ",");
+      totalAberto
+        .toFixed(2)
+        .replace(".", ",");
 
   }
 
+
+  function limparDadosTeste() {
+
+    const confirmar =
+      confirm(
+        "Deseja apagar todos os alunos e sessões cadastrados neste navegador?"
+      );
+
+
+    if (!confirmar) {
+
+      return;
+
+    }
+
+
+    alunos = [];
+
+    sessoes = [];
+
+
+    localStorage.removeItem("alunos");
+
+    localStorage.removeItem("sessoes");
+
+
+    atualizarAlunos();
+
+    atualizarResumo();
+
+
+    alert("Dados de teste apagados.");
+
+  }
+
+
   atualizarAlunos();
+
   atualizarResumo();
 
 </script>

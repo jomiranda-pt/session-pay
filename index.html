@@ -185,11 +185,12 @@
     <input type="text" id="nomeAluno" placeholder="Nome do aluno">
 
     <label>Forma de cobrança</label>
-    <select id="tipoCobranca" onchange="mostrarCamposCobranca()">
-      <option value="sessao">Por sessão</option>
-      <option value="mensal">Mensal</option>
-      <option value="pacote">Pacote</option>
-    </select>
+<select id="tipoCobranca" onchange="mostrarCamposCobranca()">
+  <option value="sessao">Por sessão</option>
+  <option value="quinzenal">Quinzenal</option>
+  <option value="mensal">Mensal</option>
+  <option value="pacote">Pacote</option>
+</select>
 
     <div id="campoSessao">
 
@@ -197,7 +198,13 @@
       <input type="number" id="valorSessao" placeholder="Ex.: 100">
 
     </div>
+    
+<div id="campoQuinzenal" style="display:none">
 
+  <label>Valor quinzenal</label>
+  <input type="number" id="valorQuinzenal" placeholder="Ex.: 350">
+
+</div>
     <div id="campoMensal" style="display:none">
 
       <label>Valor mensal</label>
@@ -284,12 +291,17 @@
     const tipo = document.getElementById("tipoCobranca").value;
 
     document.getElementById("campoSessao").style.display = "none";
+    document.getElementById("campoQuinzenal").style.display = "none";
     document.getElementById("campoMensal").style.display = "none";
     document.getElementById("campoPacote").style.display = "none";
 
     if (tipo === "sessao") {
       document.getElementById("campoSessao").style.display = "block";
     }
+    
+    if (tipo === "quinzenal") {
+  document.getElementById("campoQuinzenal").style.display = "block";
+}
 
     if (tipo === "mensal") {
       document.getElementById("campoMensal").style.display = "block";
@@ -311,15 +323,21 @@
     }
 
     let valorSessao = 0;
-    let valorMensal = 0;
-    let quantidadePacote = 0;
-    let valorPacote = 0;
+let valorQuinzenal = 0;
+let valorMensal = 0;
+let quantidadePacote = 0;
+let valorPacote = 0;
 
     if (tipo === "sessao") {
       valorSessao =
         Number(document.getElementById("valorSessao").value);
     }
-
+    
+if (tipo === "quinzenal") {
+  valorQuinzenal =
+    Number(document.getElementById("valorQuinzenal").value);
+}
+    
     if (tipo === "mensal") {
       valorMensal =
         Number(document.getElementById("valorMensal").value);
@@ -340,13 +358,14 @@
 
     const aluno = {
       id: Date.now(),
-      nome,
-      tipo,
-      valorSessao,
-      valorMensal,
-      quantidadePacote,
-      valorPacote
-    };
+nome,
+tipo,
+valorSessao,
+valorQuinzenal,
+valorMensal,
+quantidadePacote,
+valorPacote
+  };
 
     alunos.push(aluno);
 
@@ -354,6 +373,7 @@
 
     document.getElementById("nomeAluno").value = "";
     document.getElementById("valorSessao").value = "";
+    document.getElementById("valorQuinzenal").value = "";
     document.getElementById("valorMensal").value = "";
     document.getElementById("quantidadePacote").value = "";
     document.getElementById("valorPacote").value = "";
@@ -398,7 +418,15 @@
           " por sessão";
 
       }
+      
+if (aluno.tipo === "quinzenal") {
 
+  descricao =
+    "R$ " +
+    aluno.valorQuinzenal.toFixed(2).replace(".", ",") +
+    " por quinzena";
+
+}
       if (aluno.tipo === "mensal") {
 
         descricao =

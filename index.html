@@ -1,22 +1,12 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
-
   <meta charset="UTF-8">
-
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  >
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Session Pay</title>
 
   <style>
-
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
@@ -33,9 +23,7 @@
       padding: 20px;
     }
 
-    h1 {
-      margin-bottom: 5px;
-    }
+    h1 { margin-bottom: 5px; }
 
     .subtitle {
       color: #666;
@@ -49,9 +37,7 @@
       margin-bottom: 25px;
     }
 
-    .summary h2 {
-      margin-top: 0;
-    }
+    .summary h2 { margin-top: 0; }
 
     .numbers {
       display: grid;
@@ -105,11 +91,10 @@
       color: #222;
     }
 
-    .history-button {
-      background: #f0f4f8;
-      color: #222;
-      padding: 11px;
+    .small-button {
+      padding: 10px;
       font-size: 14px;
+      margin-top: 8px;
     }
 
     .form-box {
@@ -129,8 +114,7 @@
       font-weight: bold;
     }
 
-    input,
-    select {
+    input, select {
       width: 100%;
       padding: 12px;
       border: 1px solid #ccc;
@@ -153,17 +137,9 @@
       padding-top: 10px;
     }
 
-    .historico h4 {
-      margin: 4px 0 10px 0;
-    }
-
     .sessao-item {
       padding: 10px 0;
       border-bottom: 1px solid #eee;
-    }
-
-    .sessao-item:last-child {
-      border-bottom: none;
     }
 
     .sessao-data {
@@ -177,13 +153,28 @@
       margin: 2px 0;
     }
 
-    .sem-sessoes {
-      color: #777;
-      font-size: 14px;
+    .quinzena-box {
+      background: #f7f8fa;
+      border-radius: 10px;
+      padding: 12px;
+      margin-top: 10px;
     }
 
-  </style>
+    .quinzena-box strong {
+      display: block;
+      margin-bottom: 5px;
+    }
 
+    .pago {
+      color: #187a35;
+      font-weight: bold;
+    }
+
+    .aberto {
+      color: #b45b00;
+      font-weight: bold;
+    }
+  </style>
 </head>
 
 <body>
@@ -191,17 +182,12 @@
 <div class="app">
 
   <h1>Session Pay</h1>
-
-  <div class="subtitle">
-    Controle de sessões e pagamentos
-  </div>
+  <div class="subtitle">Controle de sessões e pagamentos</div>
 
   <section class="summary">
-
     <h2>Resumo</h2>
 
     <div class="numbers">
-
       <div class="number">
         Alunos
         <strong id="totalAlunos">0</strong>
@@ -226,1172 +212,823 @@
         Em aberto
         <strong id="totalAberto">R$ 0,00</strong>
       </div>
-
     </div>
-
   </section>
-
 
   <h2>Alunos</h2>
 
   <div id="listaAlunos"></div>
 
-
-  <button
-    class="secondary"
-    onclick="abrirCadastroAluno()"
-  >
+  <button class="secondary" onclick="abrirCadastroAluno()">
     + Cadastrar aluno
   </button>
 
-
-  <div
-    class="form-box"
-    id="formAluno"
-  >
+  <div class="form-box" id="formAluno">
 
     <h2>Novo aluno</h2>
 
-
     <label>Nome</label>
-
-    <input
-      type="text"
-      id="nomeAluno"
-      placeholder="Nome do aluno"
-    >
-
+    <input type="text" id="nomeAluno" placeholder="Nome do aluno">
 
     <label>Forma de cobrança</label>
 
-    <select
-      id="tipoCobranca"
-      onchange="mostrarCamposCobranca()"
-    >
-
-      <option value="sessao">
-        Por sessão
-      </option>
-
-      <option value="quinzenal">
-        Quinzenal
-      </option>
-
-      <option value="mensal">
-        Mensal
-      </option>
-
-      <option value="pacote">
-        Pacote
-      </option>
-
+    <select id="tipoCobranca" onchange="mostrarCamposCobranca()">
+      <option value="sessao">Por sessão</option>
+      <option value="quinzenal">Quinzenal</option>
+      <option value="mensal">Mensal</option>
+      <option value="pacote">Pacote</option>
     </select>
 
-
     <div id="campoSessao">
-
       <label>Valor da sessão</label>
-
-      <input
-        type="number"
-        id="valorSessao"
-        placeholder="Ex.: 100"
-      >
-
+      <input type="number" id="valorSessao" placeholder="Ex.: 100">
     </div>
 
-
-    <div
-      id="campoQuinzenal"
-      style="display:none"
-    >
-
+    <div id="campoQuinzenal" style="display:none">
       <label>Valor quinzenal</label>
-
-      <input
-        type="number"
-        id="valorQuinzenal"
-        placeholder="Ex.: 350"
-      >
-
+      <input type="number" id="valorQuinzenal" placeholder="Ex.: 400">
     </div>
 
-
-    <div
-      id="campoMensal"
-      style="display:none"
-    >
-
+    <div id="campoMensal" style="display:none">
       <label>Valor mensal</label>
-
-      <input
-        type="number"
-        id="valorMensal"
-        placeholder="Ex.: 700"
-      >
-
+      <input type="number" id="valorMensal" placeholder="Ex.: 700">
     </div>
 
+    <div id="campoPacote" style="display:none">
+      <label>Quantidade de sessões no pacote</label>
+      <input type="number" id="quantidadePacote" placeholder="Ex.: 10">
 
-    <div
-      id="campoPacote"
-      style="display:none"
-    >
-
-      <label>
-        Quantidade de sessões no pacote
-      </label>
-
-      <input
-        type="number"
-        id="quantidadePacote"
-        placeholder="Ex.: 10"
-      >
-
-
-      <label>
-        Valor total do pacote
-      </label>
-
-      <input
-        type="number"
-        id="valorPacote"
-        placeholder="Ex.: 900"
-      >
-
+      <label>Valor total do pacote</label>
+      <input type="number" id="valorPacote" placeholder="Ex.: 900">
     </div>
-
 
     <button onclick="salvarAluno()">
       Salvar aluno
     </button>
 
-
-    <div
-      class="success"
-      id="mensagemAluno"
-    >
+    <div class="success" id="mensagemAluno">
       Aluno cadastrado ✓
     </div>
 
   </div>
 
-
-  <button
-    onclick="abrirFormulario()"
-  >
+  <button onclick="abrirFormulario()">
     + Registrar sessão
   </button>
 
-
-  <div
-    class="form-box"
-    id="formSessao"
-  >
+  <div class="form-box" id="formSessao">
 
     <h2>Nova sessão</h2>
 
-
     <label>Aluno</label>
-
     <select id="aluno"></select>
 
-
     <label>Data</label>
-
-    <input
-      type="date"
-      id="data"
-    >
-
+    <input type="date" id="data">
 
     <label>Status</label>
-
     <select id="status">
-
-      <option value="realizada">
-        Realizada
-      </option>
-
-      <option value="falta">
-        Falta
-      </option>
-
-      <option value="cancelada">
-        Cancelada
-      </option>
-
+      <option value="realizada">Realizada</option>
+      <option value="falta">Falta</option>
+      <option value="cancelada">Cancelada</option>
     </select>
-
 
     <label>Cobrar?</label>
-
     <select id="cobrar">
-
-      <option value="sim">
-        Sim
-      </option>
-
-      <option value="nao">
-        Não
-      </option>
-
+      <option value="sim">Sim</option>
+      <option value="nao">Não</option>
     </select>
-
 
     <label>Pagamento</label>
-
     <select id="pagamento">
-
-      <option value="aberto">
-        Em aberto
-      </option>
-
-      <option value="pago">
-        Pago
-      </option>
-
+      <option value="aberto">Em aberto</option>
+      <option value="pago">Pago</option>
     </select>
-
 
     <button onclick="salvarSessao()">
       Salvar sessão
     </button>
 
-
-    <div
-      class="success"
-      id="mensagemSessao"
-    >
+    <div class="success" id="mensagemSessao">
       Sessão registrada ✓
     </div>
 
   </div>
 
-
-  <button
-    class="secondary"
-    onclick="limparDadosTeste()"
-  >
+  <button class="secondary" onclick="limparDadosTeste()">
     Limpar dados de teste
   </button>
 
-
 </div>
-
 
 <script>
 
+let alunos =
+  JSON.parse(localStorage.getItem("alunos")) || [];
 
-  let alunos =
-    JSON.parse(
-      localStorage.getItem("alunos")
-    ) || [];
+let sessoes =
+  JSON.parse(localStorage.getItem("sessoes")) || [];
 
-
-  let sessoes =
-    JSON.parse(
-      localStorage.getItem("sessoes")
-    ) || [];
+let cobrancas =
+  JSON.parse(localStorage.getItem("cobrancas")) || [];
 
 
-  function formatarDinheiro(valor) {
+function formatarDinheiro(valor) {
+  return "R$ " +
+    Number(valor || 0)
+      .toFixed(2)
+      .replace(".", ",");
+}
 
-    return (
-      "R$ " +
-      Number(valor || 0)
-        .toFixed(2)
-        .replace(".", ",")
-    );
 
+function formatarData(data) {
+
+  if (!data) return "Data não informada";
+
+  const partes = data.split("-");
+
+  return partes[2] + "/" +
+         partes[1] + "/" +
+         partes[0];
+}
+
+
+function abrirCadastroAluno() {
+  document.getElementById("formAluno").style.display = "block";
+}
+
+
+function mostrarCamposCobranca() {
+
+  const tipo =
+    document.getElementById("tipoCobranca").value;
+
+  document.getElementById("campoSessao").style.display = "none";
+  document.getElementById("campoQuinzenal").style.display = "none";
+  document.getElementById("campoMensal").style.display = "none";
+  document.getElementById("campoPacote").style.display = "none";
+
+  if (tipo === "sessao") {
+    document.getElementById("campoSessao").style.display = "block";
   }
 
-
-  function formatarData(data) {
-
-    if (!data) {
-      return "Data não informada";
-    }
-
-    const partes =
-      data.split("-");
-
-    if (partes.length !== 3) {
-      return data;
-    }
-
-    return (
-      partes[2] +
-      "/" +
-      partes[1] +
-      "/" +
-      partes[0]
-    );
-
+  if (tipo === "quinzenal") {
+    document.getElementById("campoQuinzenal").style.display = "block";
   }
 
-
-  function nomeStatus(status) {
-
-    if (status === "realizada") {
-      return "Realizada";
-    }
-
-    if (status === "falta") {
-      return "Falta";
-    }
-
-    if (status === "cancelada") {
-      return "Cancelada";
-    }
-
-    return status;
-
+  if (tipo === "mensal") {
+    document.getElementById("campoMensal").style.display = "block";
   }
 
+  if (tipo === "pacote") {
+    document.getElementById("campoPacote").style.display = "block";
+  }
+}
 
-  function nomePagamento(pagamento) {
 
-    if (pagamento === "pago") {
-      return "Pago";
-    }
+function salvarAluno() {
 
-    return "Em aberto";
+  const nome =
+    document.getElementById("nomeAluno").value.trim();
 
+  const tipo =
+    document.getElementById("tipoCobranca").value;
+
+  if (!nome) {
+    alert("Digite o nome do aluno.");
+    return;
   }
 
+  let valorSessao = 0;
+  let valorQuinzenal = 0;
+  let valorMensal = 0;
+  let quantidadePacote = 0;
+  let valorPacote = 0;
 
-  function abrirCadastroAluno() {
-
-    document
-      .getElementById("formAluno")
-      .style.display = "block";
-
+  if (tipo === "sessao") {
+    valorSessao =
+      Number(document.getElementById("valorSessao").value);
   }
 
-
-  function mostrarCamposCobranca() {
-
-    const tipo =
-      document
-        .getElementById("tipoCobranca")
-        .value;
-
-
-    document
-      .getElementById("campoSessao")
-      .style.display = "none";
-
-
-    document
-      .getElementById("campoQuinzenal")
-      .style.display = "none";
-
-
-    document
-      .getElementById("campoMensal")
-      .style.display = "none";
-
-
-    document
-      .getElementById("campoPacote")
-      .style.display = "none";
-
-
-    if (tipo === "sessao") {
-
-      document
-        .getElementById("campoSessao")
-        .style.display = "block";
-
-    }
-
-
-    if (tipo === "quinzenal") {
-
-      document
-        .getElementById("campoQuinzenal")
-        .style.display = "block";
-
-    }
-
-
-    if (tipo === "mensal") {
-
-      document
-        .getElementById("campoMensal")
-        .style.display = "block";
-
-    }
-
-
-    if (tipo === "pacote") {
-
-      document
-        .getElementById("campoPacote")
-        .style.display = "block";
-
-    }
-
+  if (tipo === "quinzenal") {
+    valorQuinzenal =
+      Number(document.getElementById("valorQuinzenal").value);
   }
 
+  if (tipo === "mensal") {
+    valorMensal =
+      Number(document.getElementById("valorMensal").value);
+  }
 
-  function salvarAluno() {
+  if (tipo === "pacote") {
 
-    const nome =
-      document
-        .getElementById("nomeAluno")
-        .value
-        .trim();
+    quantidadePacote =
+      Number(document.getElementById("quantidadePacote").value);
 
+    valorPacote =
+      Number(document.getElementById("valorPacote").value);
 
-    const tipo =
-      document
-        .getElementById("tipoCobranca")
-        .value;
-
-
-    if (!nome) {
-
-      alert(
-        "Digite o nome do aluno."
-      );
-
-      return;
-
-    }
-
-
-    let valorSessao = 0;
-
-    let valorQuinzenal = 0;
-
-    let valorMensal = 0;
-
-    let quantidadePacote = 0;
-
-    let valorPacote = 0;
-
-
-    if (tipo === "sessao") {
-
+    if (quantidadePacote > 0) {
       valorSessao =
-        Number(
-          document
-            .getElementById("valorSessao")
-            .value
-        );
-
+        valorPacote / quantidadePacote;
     }
+  }
+
+  const aluno = {
+    id: Date.now(),
+    nome,
+    tipo,
+    valorSessao,
+    valorQuinzenal,
+    valorMensal,
+    quantidadePacote,
+    valorPacote
+  };
+
+  alunos.push(aluno);
+
+  localStorage.setItem(
+    "alunos",
+    JSON.stringify(alunos)
+  );
+
+  document.getElementById("nomeAluno").value = "";
+  document.getElementById("valorSessao").value = "";
+  document.getElementById("valorQuinzenal").value = "";
+  document.getElementById("valorMensal").value = "";
+  document.getElementById("quantidadePacote").value = "";
+  document.getElementById("valorPacote").value = "";
+
+  document.getElementById("mensagemAluno").style.display =
+    "block";
+
+  atualizarAlunos();
+  atualizarResumo();
+}
 
 
-    if (tipo === "quinzenal") {
+function descricaoAluno(aluno) {
 
-      valorQuinzenal =
-        Number(
-          document
-            .getElementById("valorQuinzenal")
-            .value
-        );
+  if (aluno.tipo === "sessao") {
+    return formatarDinheiro(aluno.valorSessao) +
+      " por sessão";
+  }
 
-    }
+  if (aluno.tipo === "quinzenal") {
+    return formatarDinheiro(aluno.valorQuinzenal) +
+      " por quinzena";
+  }
 
+  if (aluno.tipo === "mensal") {
+    return formatarDinheiro(aluno.valorMensal) +
+      " por mês";
+  }
 
-    if (tipo === "mensal") {
+  if (aluno.tipo === "pacote") {
+    return aluno.quantidadePacote +
+      " sessões — " +
+      formatarDinheiro(aluno.valorPacote);
+  }
 
-      valorMensal =
-        Number(
-          document
-            .getElementById("valorMensal")
-            .value
-        );
-
-    }
-
-
-    if (tipo === "pacote") {
-
-      quantidadePacote =
-        Number(
-          document
-            .getElementById("quantidadePacote")
-            .value
-        );
+  return "";
+}
 
 
-      valorPacote =
-        Number(
-          document
-            .getElementById("valorPacote")
-            .value
-        );
+function obterCobrancaQuinzena(alunoId, quinzena) {
+
+  const hoje = new Date();
+
+  const mes =
+    hoje.getFullYear() +
+    "-" +
+    String(hoje.getMonth() + 1).padStart(2, "0");
+
+  return cobrancas.find(c =>
+    Number(c.alunoId) === Number(alunoId) &&
+    c.tipo === "quinzenal" &&
+    c.periodo === mes &&
+    c.quinzena === quinzena
+  );
+}
 
 
-      if (quantidadePacote > 0) {
+function registrarCobrancaQuinzenal(alunoId, quinzena) {
 
-        valorSessao =
-          valorPacote /
-          quantidadePacote;
-
-      }
-
-    }
-
-
-    const aluno = {
-
-      id: Date.now(),
-
-      nome,
-
-      tipo,
-
-      valorSessao,
-
-      valorQuinzenal,
-
-      valorMensal,
-
-      quantidadePacote,
-
-      valorPacote
-
-    };
-
-
-    alunos.push(aluno);
-
-
-    localStorage.setItem(
-      "alunos",
-      JSON.stringify(alunos)
+  const aluno =
+    alunos.find(a =>
+      Number(a.id) === Number(alunoId)
     );
 
+  if (!aluno) return;
 
-    document
-      .getElementById("nomeAluno")
-      .value = "";
+  const existente =
+    obterCobrancaQuinzena(alunoId, quinzena);
 
+  if (existente) {
 
-    document
-      .getElementById("valorSessao")
-      .value = "";
+    alert(
+      "Esta quinzena já foi lançada."
+    );
 
-
-    document
-      .getElementById("valorQuinzenal")
-      .value = "";
-
-
-    document
-      .getElementById("valorMensal")
-      .value = "";
-
-
-    document
-      .getElementById("quantidadePacote")
-      .value = "";
-
-
-    document
-      .getElementById("valorPacote")
-      .value = "";
-
-
-    document
-      .getElementById("mensagemAluno")
-      .style.display = "block";
-
-
-    atualizarAlunos();
-
-    atualizarResumo();
-
+    return;
   }
 
+  const hoje = new Date();
 
-  function atualizarAlunos() {
+  const mes =
+    hoje.getFullYear() +
+    "-" +
+    String(hoje.getMonth() + 1).padStart(2, "0");
 
-    const lista =
-      document
-        .getElementById("listaAlunos");
+  cobrancas.push({
+    id: Date.now(),
+    alunoId: aluno.id,
+    alunoNome: aluno.nome,
+    tipo: "quinzenal",
+    periodo: mes,
+    quinzena,
+    valor: Number(aluno.valorQuinzenal || 0),
+    pagamento: "aberto"
+  });
 
+  localStorage.setItem(
+    "cobrancas",
+    JSON.stringify(cobrancas)
+  );
 
-    const select =
-      document
-        .getElementById("aluno");
+  atualizarAlunos();
+  atualizarResumo();
+}
 
 
-    lista.innerHTML = "";
+function marcarQuinzenaPaga(alunoId, quinzena) {
 
-    select.innerHTML = "";
+  const cobranca =
+    obterCobrancaQuinzena(
+      alunoId,
+      quinzena
+    );
 
+  if (!cobranca) return;
 
-    if (alunos.length === 0) {
+  cobranca.pagamento = "pago";
 
-      lista.innerHTML =
-        "<p style='color:#666'>Nenhum aluno cadastrado ainda.</p>";
+  localStorage.setItem(
+    "cobrancas",
+    JSON.stringify(cobrancas)
+  );
 
+  atualizarAlunos();
+  atualizarResumo();
+}
 
-      select.innerHTML =
-        "<option>Cadastre um aluno primeiro</option>";
 
+function atualizarAlunos() {
 
-      return;
+  const lista =
+    document.getElementById("listaAlunos");
 
-    }
+  const select =
+    document.getElementById("aluno");
 
+  lista.innerHTML = "";
+  select.innerHTML = "";
 
-    alunos.forEach(aluno => {
+  if (alunos.length === 0) {
 
+    lista.innerHTML =
+      "<p style='color:#666'>Nenhum aluno cadastrado ainda.</p>";
 
-      const card =
-        document.createElement("div");
+    select.innerHTML =
+      "<option>Cadastre um aluno primeiro</option>";
 
+    return;
+  }
 
-      card.className =
-        "client";
+  alunos.forEach(aluno => {
 
-
-      let descricao = "";
-
-
-      if (aluno.tipo === "sessao") {
-
-        descricao =
-          formatarDinheiro(
-            aluno.valorSessao
-          ) +
-          " por sessão";
-
-      }
-
-
-      if (aluno.tipo === "quinzenal") {
-
-        descricao =
-          formatarDinheiro(
-            aluno.valorQuinzenal
-          ) +
-          " por quinzena";
-
-      }
-
-
-      if (aluno.tipo === "mensal") {
-
-        descricao =
-          formatarDinheiro(
-            aluno.valorMensal
-          ) +
-          " por mês";
-
-      }
-
-
-      if (aluno.tipo === "pacote") {
-
-        descricao =
-          aluno.quantidadePacote +
-          " sessões — " +
-          formatarDinheiro(
-            aluno.valorPacote
-          );
-
-      }
-
-
-      const sessoesAluno =
-        sessoes
-          .filter(
-            sessao =>
-              Number(sessao.alunoId) ===
-              Number(aluno.id)
-          )
-          .sort(
-            (a, b) =>
-              String(b.data)
-                .localeCompare(
-                  String(a.data)
-                )
-          );
-
-
-      let historicoHtml = "";
-
-
-      if (sessoesAluno.length === 0) {
-
-        historicoHtml =
-          "<p class='sem-sessoes'>" +
-          "Nenhuma sessão registrada ainda." +
-          "</p>";
-
-      } else {
-
-
-        sessoesAluno.forEach(
-          sessao => {
-
-
-            let textoValor = "";
-
-
-            if (
-              Number(sessao.valor || 0) > 0
-            ) {
-
-              textoValor =
-                "<div class='sessao-detalhe'>" +
-                "Valor: " +
-                formatarDinheiro(
-                  sessao.valor
-                ) +
-                "</div>";
-
-            }
-
-
-            historicoHtml +=
-
-              "<div class='sessao-item'>" +
-
-                "<div class='sessao-data'>" +
-                  formatarData(
-                    sessao.data
-                  ) +
-                "</div>" +
-
-                "<div class='sessao-detalhe'>" +
-                  "Status: " +
-                  nomeStatus(
-                    sessao.status
-                  ) +
-                "</div>" +
-
-                "<div class='sessao-detalhe'>" +
-                  "Cobrança da sessão: " +
-                  (
-                    sessao.cobrar === "sim"
-                    ? "Sim"
-                    : "Não"
-                  ) +
-                "</div>" +
-
-                "<div class='sessao-detalhe'>" +
-                  "Pagamento: " +
-                  nomePagamento(
-                    sessao.pagamento
-                  ) +
-                "</div>" +
-
-                textoValor +
-
-              "</div>";
-
-          }
+    const sessoesAluno =
+      sessoes
+        .filter(s =>
+          Number(s.alunoId) ===
+          Number(aluno.id)
+        )
+        .sort((a, b) =>
+          String(b.data)
+            .localeCompare(String(a.data))
         );
 
-      }
+    let historicoHtml = "";
 
+    if (sessoesAluno.length === 0) {
 
-      card.innerHTML =
-
-        "<h3>" +
-          aluno.nome +
-        "</h3>" +
-
-        "<p>" +
-          descricao +
-        "</p>" +
-
-        "<p>" +
-          "Sessões registradas: " +
-          sessoesAluno.length +
-        "</p>" +
-
-        "<button " +
-          "class='history-button' " +
-          "onclick='alternarHistorico(" +
-          aluno.id +
-          ")'>" +
-          "Ver histórico de sessões" +
-        "</button>" +
-
-        "<div " +
-          "class='historico' " +
-          "id='historico-" +
-          aluno.id +
-          "'>" +
-
-          "<h4>Histórico de sessões</h4>" +
-
-          historicoHtml +
-
-        "</div>";
-
-
-      lista.appendChild(card);
-
-
-      const option =
-        document.createElement("option");
-
-
-      option.value =
-        aluno.id;
-
-
-      option.textContent =
-        aluno.nome;
-
-
-      select.appendChild(option);
-
-    });
-
-  }
-
-
-  function alternarHistorico(alunoId) {
-
-    const historico =
-      document.getElementById(
-        "historico-" + alunoId
-      );
-
-
-    if (!historico) {
-      return;
-    }
-
-
-    if (
-      historico.style.display === "block"
-    ) {
-
-      historico.style.display =
-        "none";
+      historicoHtml =
+        "<p>Nenhuma sessão registrada ainda.</p>";
 
     } else {
 
-      historico.style.display =
-        "block";
+      sessoesAluno.forEach(sessao => {
 
+        historicoHtml +=
+          "<div class='sessao-item'>" +
+
+          "<div class='sessao-data'>" +
+          formatarData(sessao.data) +
+          "</div>" +
+
+          "<div class='sessao-detalhe'>" +
+          "Status: " +
+          sessao.status +
+          "</div>" +
+
+          "<div class='sessao-detalhe'>" +
+          "Cobrar: " +
+          (sessao.cobrar === "sim" ? "Sim" : "Não") +
+          "</div>" +
+
+          (
+            Number(sessao.valor || 0) > 0
+            ?
+            "<div class='sessao-detalhe'>" +
+            "Valor: " +
+            formatarDinheiro(sessao.valor) +
+            "</div>"
+            :
+            ""
+          ) +
+
+          "</div>";
+      });
     }
 
-  }
+    let financeiroQuinzenal = "";
 
+    if (aluno.tipo === "quinzenal") {
 
-  function abrirFormulario() {
+      const primeira =
+        obterCobrancaQuinzena(
+          aluno.id,
+          1
+        );
 
-    if (alunos.length === 0) {
+      const segunda =
+        obterCobrancaQuinzena(
+          aluno.id,
+          2
+        );
 
-      alert(
-        "Cadastre um aluno primeiro."
-      );
+      financeiroQuinzenal +=
+        "<div class='quinzena-box'>" +
+        "<strong>1ª quinzena — dias 1 a 15</strong>";
 
-      return;
+      if (!primeira) {
 
-    }
+        financeiroQuinzenal +=
+          "<span class='aberto'>Ainda não lançada</span>" +
 
+          "<button class='small-button' " +
+          "onclick='registrarCobrancaQuinzenal(" +
+          aluno.id +
+          ",1)'>" +
+          "Lançar " +
+          formatarDinheiro(aluno.valorQuinzenal) +
+          "</button>";
 
-    document
-      .getElementById("formSessao")
-      .style.display = "block";
-
-
-    if (
-      !document
-        .getElementById("data")
-        .value
-    ) {
-
-      const hoje =
-        new Date();
-
-
-      document
-        .getElementById("data")
-        .value =
-          hoje
-            .toISOString()
-            .split("T")[0];
-
-    }
-
-  }
-
-
-  function salvarSessao() {
-
-    const alunoId =
-      Number(
-        document
-          .getElementById("aluno")
-          .value
-      );
-
-
-    const aluno =
-      alunos.find(
-        item =>
-          Number(item.id) ===
-          alunoId
-      );
-
-
-    if (!aluno) {
-
-      alert(
-        "Selecione um aluno."
-      );
-
-      return;
-
-    }
-
-
-    const data =
-      document
-        .getElementById("data")
-        .value;
-
-
-    if (!data) {
-
-      alert(
-        "Informe a data da sessão."
-      );
-
-      return;
-
-    }
-
-
-    const status =
-      document
-        .getElementById("status")
-        .value;
-
-
-    const cobrar =
-      document
-        .getElementById("cobrar")
-        .value;
-
-
-    const pagamento =
-      document
-        .getElementById("pagamento")
-        .value;
-
-
-    let valor = 0;
-
-
-    if (cobrar === "sim") {
-
-
-      if (
-        aluno.tipo === "sessao"
+      } else if (
+        primeira.pagamento === "pago"
       ) {
 
-        valor =
-          Number(
-            aluno.valorSessao || 0
-          );
+        financeiroQuinzenal +=
+          "<span class='pago'>Pago ✓</span>";
 
+      } else {
+
+        financeiroQuinzenal +=
+          "<span class='aberto'>" +
+          formatarDinheiro(primeira.valor) +
+          " — Em aberto</span>" +
+
+          "<button class='small-button' " +
+          "onclick='marcarQuinzenaPaga(" +
+          aluno.id +
+          ",1)'>" +
+          "Marcar como pago" +
+          "</button>";
       }
 
+      financeiroQuinzenal +=
+        "</div>";
 
-      if (
-        aluno.tipo === "pacote"
+
+      financeiroQuinzenal +=
+        "<div class='quinzena-box'>" +
+        "<strong>2ª quinzena — dia 16 ao fim do mês</strong>";
+
+      if (!segunda) {
+
+        financeiroQuinzenal +=
+          "<span class='aberto'>Ainda não lançada</span>" +
+
+          "<button class='small-button' " +
+          "onclick='registrarCobrancaQuinzenal(" +
+          aluno.id +
+          ",2)'>" +
+          "Lançar " +
+          formatarDinheiro(aluno.valorQuinzenal) +
+          "</button>";
+
+      } else if (
+        segunda.pagamento === "pago"
       ) {
 
-        valor =
-          Number(
-            aluno.valorSessao || 0
-          );
+        financeiroQuinzenal +=
+          "<span class='pago'>Pago ✓</span>";
 
+      } else {
+
+        financeiroQuinzenal +=
+          "<span class='aberto'>" +
+          formatarDinheiro(segunda.valor) +
+          " — Em aberto</span>" +
+
+          "<button class='small-button' " +
+          "onclick='marcarQuinzenaPaga(" +
+          aluno.id +
+          ",2)'>" +
+          "Marcar como pago" +
+          "</button>";
       }
 
+      financeiroQuinzenal +=
+        "</div>";
     }
 
+    const card =
+      document.createElement("div");
 
-    const sessao = {
+    card.className = "client";
 
-      id: Date.now(),
+    card.innerHTML =
+      "<h3>" +
+      aluno.nome +
+      "</h3>" +
 
-      alunoId:
-        aluno.id,
+      "<p>" +
+      descricaoAluno(aluno) +
+      "</p>" +
 
-      alunoNome:
-        aluno.nome,
+      financeiroQuinzenal +
 
-      data,
+      "<p> sessões registradas: " +
+      sessoesAluno.length +
+      "</p>" +
 
-      status,
+      "<button class='secondary small-button' " +
+      "onclick='alternarHistorico(" +
+      aluno.id +
+      ")'>" +
+      "Ver histórico de sessões" +
+      "</button>" +
 
-      cobrar,
+      "<div class='historico' " +
+      "id='historico-" +
+      aluno.id +
+      "'>" +
 
-      pagamento,
+      "<h4>Histórico de sessões</h4>" +
 
-      valor
+      historicoHtml +
 
-    };
+      "</div>";
+
+    lista.appendChild(card);
+
+    const option =
+      document.createElement("option");
+
+    option.value = aluno.id;
+    option.textContent = aluno.nome;
+
+    select.appendChild(option);
+  });
+}
 
 
-    sessoes.push(sessao);
+function alternarHistorico(alunoId) {
 
-
-    localStorage.setItem(
-      "sessoes",
-      JSON.stringify(sessoes)
+  const historico =
+    document.getElementById(
+      "historico-" + alunoId
     );
 
+  if (!historico) return;
 
-    document
-      .getElementById("mensagemSessao")
-      .style.display =
-        "block";
+  historico.style.display =
+    historico.style.display === "block"
+      ? "none"
+      : "block";
+}
 
 
-    atualizarAlunos();
+function abrirFormulario() {
 
-    atualizarResumo();
-
+  if (alunos.length === 0) {
+    alert("Cadastre um aluno primeiro.");
+    return;
   }
 
+  document.getElementById("formSessao").style.display =
+    "block";
 
-  function atualizarResumo() {
+  if (!document.getElementById("data").value) {
 
-    let totalValor = 0;
+    const hoje = new Date();
 
-    let totalPago = 0;
-
-    let totalAberto = 0;
-
-
-    sessoes.forEach(
-      sessao => {
-
-
-        const valor =
-          Number(
-            sessao.valor || 0
-          );
+    document.getElementById("data").value =
+      hoje.toISOString().split("T")[0];
+  }
+}
 
 
-        totalValor +=
-          valor;
+function salvarSessao() {
 
-
-        if (
-          sessao.pagamento === "pago"
-        ) {
-
-          totalPago +=
-            valor;
-
-        } else {
-
-          totalAberto +=
-            valor;
-
-        }
-
-      }
+  const alunoId =
+    Number(
+      document.getElementById("aluno").value
     );
 
+  const aluno =
+    alunos.find(a =>
+      Number(a.id) === alunoId
+    );
 
-    document
-      .getElementById("totalAlunos")
-      .textContent =
-        alunos.length;
-
-
-    document
-      .getElementById("totalSessoes")
-      .textContent =
-        sessoes.length;
-
-
-    document
-      .getElementById("totalValor")
-      .textContent =
-        formatarDinheiro(
-          totalValor
-        );
-
-
-    document
-      .getElementById("totalPago")
-      .textContent =
-        formatarDinheiro(
-          totalPago
-        );
-
-
-    document
-      .getElementById("totalAberto")
-      .textContent =
-        formatarDinheiro(
-          totalAberto
-        );
-
+  if (!aluno) {
+    alert("Selecione um aluno.");
+    return;
   }
 
+  const data =
+    document.getElementById("data").value;
 
-  function limparDadosTeste() {
-
-    const confirmar =
-      confirm(
-        "Deseja apagar todos os alunos e sessões cadastrados neste navegador?"
-      );
-
-
-    if (!confirmar) {
-
-      return;
-
-    }
-
-
-    alunos = [];
-
-    sessoes = [];
-
-
-    localStorage.removeItem(
-      "alunos"
-    );
-
-
-    localStorage.removeItem(
-      "sessoes"
-    );
-
-
-    atualizarAlunos();
-
-    atualizarResumo();
-
-
-    alert(
-      "Dados de teste apagados."
-    );
-
+  if (!data) {
+    alert("Informe a data da sessão.");
+    return;
   }
 
+  const status =
+    document.getElementById("status").value;
+
+  const cobrar =
+    document.getElementById("cobrar").value;
+
+  const pagamento =
+    document.getElementById("pagamento").value;
+
+  let valor = 0;
+
+  /*
+    Por sessão:
+    a própria sessão gera a cobrança.
+
+    Quinzenal:
+    a sessão NÃO gera cobrança.
+    O financeiro é controlado pelas quinzenas.
+  */
+
+  if (
+    cobrar === "sim" &&
+    aluno.tipo === "sessao"
+  ) {
+
+    valor =
+      Number(aluno.valorSessao || 0);
+  }
+
+  const sessao = {
+    id: Date.now(),
+    alunoId: aluno.id,
+    alunoNome: aluno.nome,
+    data,
+    status,
+    cobrar,
+    pagamento,
+    valor
+  };
+
+  sessoes.push(sessao);
+
+  localStorage.setItem(
+    "sessoes",
+    JSON.stringify(sessoes)
+  );
+
+  document.getElementById("mensagemSessao").style.display =
+    "block";
 
   atualizarAlunos();
+  atualizarResumo();
+}
 
+
+function atualizarResumo() {
+
+  let totalValor = 0;
+  let totalPago = 0;
+  let totalAberto = 0;
+
+  /*
+    Cobranças geradas pelas sessões.
+  */
+
+  sessoes.forEach(sessao => {
+
+    const valor =
+      Number(sessao.valor || 0);
+
+    totalValor += valor;
+
+    if (
+      sessao.pagamento === "pago"
+    ) {
+
+      totalPago += valor;
+
+    } else {
+
+      totalAberto += valor;
+    }
+  });
+
+
+  /*
+    Cobranças quinzenais.
+  */
+
+  cobrancas.forEach(cobranca => {
+
+    const valor =
+      Number(cobranca.valor || 0);
+
+    totalValor += valor;
+
+    if (
+      cobranca.pagamento === "pago"
+    ) {
+
+      totalPago += valor;
+
+    } else {
+
+      totalAberto += valor;
+    }
+  });
+
+
+  document.getElementById("totalAlunos").textContent =
+    alunos.length;
+
+  document.getElementById("totalSessoes").textContent =
+    sessoes.length;
+
+  document.getElementById("totalValor").textContent =
+    formatarDinheiro(totalValor);
+
+  document.getElementById("totalPago").textContent =
+    formatarDinheiro(totalPago);
+
+  document.getElementById("totalAberto").textContent =
+    formatarDinheiro(totalAberto);
+}
+
+
+function limparDadosTeste() {
+
+  const confirmar =
+    confirm(
+      "Deseja apagar todos os alunos, sessões e cobranças cadastrados neste navegador?"
+    );
+
+  if (!confirmar) return;
+
+  alunos = [];
+  sessoes = [];
+  cobrancas = [];
+
+  localStorage.removeItem("alunos");
+  localStorage.removeItem("sessoes");
+  localStorage.removeItem("cobrancas");
+
+  atualizarAlunos();
   atualizarResumo();
 
+  alert("Dados de teste apagados.");
+}
+
+
+atualizarAlunos();
+atualizarResumo();
 
 </script>
 
 </body>
-
 </html>

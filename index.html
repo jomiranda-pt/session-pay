@@ -346,7 +346,10 @@ let alunos =
 alunos = alunos.map(aluno => ({
   ...aluno,
   statusAluno: aluno.statusAluno || "ativo",
-  dataInativacao: aluno.dataInativacao || ""
+  dataInativacao: aluno.dataInativacao || "",
+  dataInicioPausa: aluno.dataInicioPausa || "",
+  dataRetornoPrevisto: aluno.dataRetornoPrevisto || "",
+  cobrarDurantePausa: aluno.cobrarDurantePausa || ""
 }));
 
 let sessoes =
@@ -752,6 +755,64 @@ function marcarPacotePago(alunoId) {
 
 function statusAtualAluno(aluno) {
   return aluno.statusAluno || "ativo";
+}
+
+function pausarAluno(alunoId) {
+  const aluno = alunos.find(a => Number(a.id) === Number(alunoId));
+  if (!aluno) return;
+
+  const hoje = new Date().toISOString().slice(0, 10);
+
+  const inicio = prompt(
+    "Início da pausa (AAAA-MM-DD):",
+    hoje
+  );
+
+  if (inicio === null) return;
+  if (!inicio) {
+    alert("Informe a data de início da pausa.");
+    return;
+  }
+
+  const retorno = prompt(
+    "Retorno previsto (AAAA-MM-DD). Se ainda não souber, deixe em branco:",
+    ""
+  );
+
+  if (retorno === null) return;
+
+  const cobrar = confirm(
+    "Haverá cobrança normal durante a pausa?\n\n" +
+    "OK = Sim\nCancelar = Não"
+  );
+
+  aluno.statusAluno = "pausa";
+  aluno.dataInicioPausa = inicio;
+  aluno.dataRetornoPrevisto = retorno || "";
+  aluno.cobrarDurantePausa = cobrar ? "sim" : "nao";
+
+  localStorage.setItem("alunos", JSON.stringify(alunos));
+  atualizarAlunos();
+  atualizarResumo();
+}
+
+function cancelarPausaAluno(alunoId) {
+  const aluno = alunos.find(a => Number(a.id) === Number(alunoId));
+  if (!aluno) return;
+
+  const confirmar = confirm(
+    "Encerrar a pausa de " + aluno.nome + " e voltar para Ativo?"
+  );
+  if (!confirmar) return;
+
+  aluno.statusAluno = "ativo";
+  aluno.dataInicioPausa = "";
+  aluno.dataRetornoPrevisto = "";
+  aluno.cobrarDurantePausa = "";
+
+  localStorage.setItem("alunos", JSON.stringify(alunos));
+  atualizarAlunos();
+  atualizarResumo();
 }
 
 function inativarAluno(alunoId) {
@@ -1234,7 +1295,11 @@ function atualizarAlunos() {
       "</p>" +
 
       "<p><strong>Status:</strong> " +
-      (statusAtualAluno(aluno) === "inativo" ? "Inativo" : "Ativo") +
+      (statusAtualAluno(aluno) === "inativo"
+        ? "Inativo"
+        : statusAtualAluno(aluno) === "pausa"
+          ? "Em pausa"
+          : "Ativo") +
       "</p>" +
 
       (statusAtualAluno(aluno) === "inativo"
@@ -1244,9 +1309,29 @@ function atualizarAlunos() {
           "<button class='small-button' onclick='reativarAluno(" +
           aluno.id +
           ")'>Reativar aluno</button>"
-        : "<button class='secondary small-button' onclick='inativarAluno(" +
-          aluno.id +
-          ")'>Inativar aluno</button>") +
+
+        : statusAtualAluno(aluno) === "pausa"
+          ? "<p>Início da pausa: " +
+            formatarData(aluno.dataInicioPausa) +
+            "</p>" +
+            (aluno.dataRetornoPrevisto
+              ? "<p>Retorno previsto: " +
+                formatarData(aluno.dataRetornoPrevisto) +
+                "</p>"
+              : "<p>Retorno previsto: não informado</p>") +
+            "<p>Cobrar durante a pausa: " +
+            (aluno.cobrarDurantePausa === "sim" ? "Sim" : "Não") +
+            "</p>" +
+            "<button class='small-button' onclick='cancelarPausaAluno(" +
+            aluno.id +
+            ")'>Encerrar pausa</button>"
+
+          : "<button class='secondary small-button' onclick='pausarAluno(" +
+            aluno.id +
+            ")'>Colocar em pausa</button>" +
+            "<button class='secondary small-button' onclick='inativarAluno(" +
+            aluno.id +
+            ")'>Inativar aluno</button>") +
 
       "<button class='secondary small-button' " +
       "onclick='alternarHistorico(" +

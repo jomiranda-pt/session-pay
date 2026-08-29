@@ -833,6 +833,13 @@ function atualizarAlunos() {
             ""
           ) +
 
+          "<button class='secondary small-button' " +
+          "onclick='desfazerSessao(" +
+          sessao.id +
+          ")'>" +
+          "Desfazer" +
+          "</button>" +
+
           "</div>";
       });
     }
@@ -1123,6 +1130,56 @@ function atualizarAlunos() {
 
     select.appendChild(option);
   });
+}
+
+
+function desfazerSessao(sessaoId) {
+
+  const sessao =
+    sessoes.find(s =>
+      Number(s.id) === Number(sessaoId)
+    );
+
+  if (!sessao) return;
+
+  const reposicoesLigadas =
+    sessoes.filter(s =>
+      s.status === "reposicao" &&
+      Number(s.faltaOrigemId) === Number(sessaoId)
+    );
+
+  let mensagem =
+    "Deseja desfazer este lançamento?";
+
+  if (reposicoesLigadas.length > 0) {
+    mensagem =
+      "Esta falta possui uma reposição vinculada. " +
+      "Ao desfazer a falta, a reposição também será removida. Continuar?";
+  }
+
+  const confirmar =
+    confirm(mensagem);
+
+  if (!confirmar) return;
+
+  const idsRemover =
+    new Set([
+      Number(sessaoId),
+      ...reposicoesLigadas.map(r => Number(r.id))
+    ]);
+
+  sessoes =
+    sessoes.filter(s =>
+      !idsRemover.has(Number(s.id))
+    );
+
+  localStorage.setItem(
+    "sessoes",
+    JSON.stringify(sessoes)
+  );
+
+  atualizarAlunos();
+  atualizarResumo();
 }
 
 

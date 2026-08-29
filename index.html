@@ -281,23 +281,31 @@
     <h2>Nova sessão</h2>
 
     <label>Aluno</label>
-    <select id="aluno"></select>
+    <select id="aluno" onchange="atualizarCamposSessao()"></select>
 
     <label>Data</label>
     <input type="date" id="data">
 
     <label>Status</label>
-    <select id="status">
+    <select id="status" onchange="atualizarCamposSessao()">
       <option value="realizada">Realizada</option>
       <option value="falta">Falta</option>
+      <option value="reposicao">Reposição</option>
       <option value="cancelada">Cancelada</option>
     </select>
 
-    <label>Cobrar?</label>
-    <select id="cobrar">
-      <option value="sim">Sim</option>
-      <option value="nao">Não</option>
-    </select>
+    <div id="campoReposicao" style="display:none">
+      <label>Qual falta está sendo reposta?</label>
+      <select id="faltaReposicao"></select>
+    </div>
+
+    <div id="campoCobrar">
+      <label>Cobrar?</label>
+      <select id="cobrar">
+        <option value="sim">Sim</option>
+        <option value="nao">Não</option>
+      </select>
+    </div>
 
     <label>Pagamento</label>
     <select id="pagamento">
@@ -791,6 +799,30 @@ function atualizarAlunos() {
           "</div>" +
 
           (
+            sessao.status === "reposicao" &&
+            sessao.faltaOrigemId
+            ?
+            (
+              () => {
+                const faltaOrigem =
+                  sessoes.find(s =>
+                    Number(s.id) ===
+                    Number(sessao.faltaOrigemId)
+                  );
+
+                return faltaOrigem
+                  ? "<div class='sessao-detalhe'>" +
+                    "Reposição da falta de " +
+                    formatarData(faltaOrigem.data) +
+                    "</div>"
+                  : "";
+              }
+            )()
+            :
+            ""
+          ) +
+
+          (
             Number(sessao.valor || 0) > 0
             ?
             "<div class='sessao-detalhe'>" +
@@ -1110,6 +1142,89 @@ function alternarHistorico(alunoId) {
 }
 
 
+function obterFaltasDisponiveisReposicao(alunoId) {
+
+  return sessoes
+    .filter(sessao =>
+      Number(sessao.alunoId) === Number(alunoId) &&
+      sessao.status === "falta" &&
+      sessao.cobrar === "sim" &&
+      !sessoes.some(reposicao =>
+        reposicao.status === "reposicao" &&
+        Number(reposicao.faltaOrigemId) === Number(sessao.id)
+      )
+    )
+    .sort((a, b) =>
+      String(b.data).localeCompare(String(a.data))
+    );
+}
+
+
+function atualizarCamposSessao() {
+
+  const status =
+    document.getElementById("status").value;
+
+  const campoReposicao =
+    document.getElementById("campoReposicao");
+
+  const campoCobrar =
+    document.getElementById("campoCobrar");
+
+  const pagamento =
+    document.getElementById("pagamento");
+
+  if (status === "reposicao") {
+
+    campoReposicao.style.display = "block";
+    campoCobrar.style.display = "none";
+    pagamento.value = "aberto";
+
+    const alunoId =
+      Number(document.getElementById("aluno").value);
+
+    const selectFalta =
+      document.getElementById("faltaReposicao");
+
+    const faltas =
+      obterFaltasDisponiveisReposicao(alunoId);
+
+    selectFalta.innerHTML = "";
+
+    if (faltas.length === 0) {
+
+      const option =
+        document.createElement("option");
+
+      option.value = "";
+      option.textContent =
+        "Nenhuma falta cobrada disponível";
+
+      selectFalta.appendChild(option);
+
+    } else {
+
+      faltas.forEach(falta => {
+
+        const option =
+          document.createElement("option");
+
+        option.value = falta.id;
+        option.textContent =
+          "Falta de " + formatarData(falta.data);
+
+        selectFalta.appendChild(option);
+      });
+    }
+
+  } else {
+
+    campoReposicao.style.display = "none";
+    campoCobrar.style.display = "block";
+  }
+}
+
+
 function abrirFormulario() {
 
   if (alunos.length === 0) {
@@ -1127,6 +1242,8 @@ function abrirFormulario() {
     document.getElementById("data").value =
       hoje.toISOString().split("T")[0];
   }
+
+  atualizarCamposSessao();
 }
 
 
@@ -1158,11 +1275,28 @@ function salvarSessao() {
   const status =
     document.getElementById("status").value;
 
-  const cobrar =
+  let cobrar =
     document.getElementById("cobrar").value;
 
   const pagamento =
     document.getElementById("pagamento").value;
+
+  let faltaOrigemId = null;
+
+  if (status === "reposicao") {
+
+    faltaOrigemId =
+      Number(
+        document.getElementById("faltaReposicao").value
+      );
+
+    if (!faltaOrigemId) {
+      alert("Este aluno não tem falta cobrada disponível para reposição.");
+      return;
+    }
+
+    cobrar = "nao";
+  }
 
   let valor = 0;
 
@@ -1200,7 +1334,8 @@ function salvarSessao() {
     status,
     cobrar,
     pagamento,
-    valor
+    valor,
+    faltaOrigemId
   };
 
   sessoes.push(sessao);

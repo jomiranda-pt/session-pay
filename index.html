@@ -663,6 +663,70 @@ function marcarMensalidadePaga(alunoId) {
 }
 
 
+function obterCobrancaPacote(alunoId) {
+
+  return cobrancas.find(c =>
+    Number(c.alunoId) === Number(alunoId) &&
+    c.tipo === "pacote"
+  );
+}
+
+
+function registrarCobrancaPacote(alunoId) {
+
+  const aluno =
+    alunos.find(a =>
+      Number(a.id) === Number(alunoId)
+    );
+
+  if (!aluno) return;
+
+  const existente =
+    obterCobrancaPacote(alunoId);
+
+  if (existente) {
+    alert("Este pacote já foi lançado.");
+    return;
+  }
+
+  cobrancas.push({
+    id: Date.now(),
+    alunoId: aluno.id,
+    alunoNome: aluno.nome,
+    tipo: "pacote",
+    valor: Number(aluno.valorPacote || 0),
+    pagamento: "aberto"
+  });
+
+  localStorage.setItem(
+    "cobrancas",
+    JSON.stringify(cobrancas)
+  );
+
+  atualizarAlunos();
+  atualizarResumo();
+}
+
+
+function marcarPacotePago(alunoId) {
+
+  const cobranca =
+    obterCobrancaPacote(alunoId);
+
+  if (!cobranca) return;
+
+  cobranca.pagamento = "pago";
+
+  localStorage.setItem(
+    "cobrancas",
+    JSON.stringify(cobrancas)
+  );
+
+  atualizarAlunos();
+  atualizarResumo();
+}
+
+
 function atualizarAlunos() {
 
   const lista =
@@ -893,6 +957,88 @@ function atualizarAlunos() {
         "</div>";
     }
 
+
+    let financeiroPacote = "";
+
+    if (aluno.tipo === "pacote") {
+
+      const cobrancaPacote =
+        obterCobrancaPacote(aluno.id);
+
+      const sessoesConsumidas =
+        sessoesAluno.filter(sessao =>
+          sessao.cobrar === "sim" &&
+          (
+            sessao.status === "realizada" ||
+            sessao.status === "falta"
+          )
+        ).length;
+
+      const restantes =
+        Math.max(
+          Number(aluno.quantidadePacote || 0) -
+          sessoesConsumidas,
+          0
+        );
+
+      financeiroPacote +=
+        "<div class='quinzena-box'>" +
+        "<strong>Pacote</strong>" +
+        "<div class='sessao-detalhe'>" +
+        "Restam: " +
+        restantes +
+        " de " +
+        Number(aluno.quantidadePacote || 0) +
+        " sessões</div>";
+
+      if (!cobrancaPacote) {
+
+        financeiroPacote +=
+          "<span class='aberto'>Pagamento ainda não lançado</span>" +
+
+          "<button class='small-button' " +
+          "onclick='registrarCobrancaPacote(" +
+          aluno.id +
+          ")'>" +
+          "Lançar " +
+          formatarDinheiro(aluno.valorPacote) +
+          "</button>";
+
+      } else if (
+        cobrancaPacote.pagamento === "pago"
+      ) {
+
+        financeiroPacote +=
+          "<span class='pago'>" +
+          formatarDinheiro(cobrancaPacote.valor) +
+          " — Pago ✓</span>";
+
+      } else {
+
+        financeiroPacote +=
+          "<span class='aberto'>" +
+          formatarDinheiro(cobrancaPacote.valor) +
+          " — Em aberto</span>" +
+
+          "<button class='small-button' " +
+          "onclick='marcarPacotePago(" +
+          aluno.id +
+          ")'>" +
+          "Marcar como pago" +
+          "</button>";
+      }
+
+      if (restantes === 0) {
+        financeiroPacote +=
+          "<div class='sessao-detalhe' style='margin-top:8px;font-weight:bold'>" +
+          "Pacote encerrado — renovar pacote" +
+          "</div>";
+      }
+
+      financeiroPacote +=
+        "</div>";
+    }
+
     const card =
       document.createElement("div");
 
@@ -910,6 +1056,8 @@ function atualizarAlunos() {
       financeiroQuinzenal +
 
       financeiroMensal +
+
+      financeiroPacote +
 
       "<p> sessões registradas: " +
       sessoesAluno.length +
@@ -1029,6 +1177,10 @@ function salvarSessao() {
     Mensal:
     a sessão NÃO gera cobrança.
     O financeiro é controlado pela mensalidade.
+
+    Pacote:
+    a sessão NÃO gera nova cobrança.
+    Sessão realizada cobrada ou falta cobrada consome 1 sessão do pacote.
   */
 
   if (

@@ -379,6 +379,51 @@ function formatarData(data) {
 }
 
 
+function converterDataBrasilParaISO(dataBrasil) {
+  const texto = String(dataBrasil || "").trim();
+
+  if (!texto) return "";
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(texto)) {
+    return texto;
+  }
+
+  const partes = texto.split(/[\/\-]/);
+
+  if (partes.length !== 3) return null;
+
+  const dia = Number(partes[0]);
+  const mes = Number(partes[1]);
+  const ano = Number(partes[2]);
+
+  if (!dia || !mes || !ano) return null;
+
+  const teste = new Date(ano, mes - 1, dia);
+
+  if (
+    teste.getFullYear() !== ano ||
+    teste.getMonth() !== mes - 1 ||
+    teste.getDate() !== dia
+  ) {
+    return null;
+  }
+
+  return (
+    String(ano).padStart(4, "0") + "-" +
+    String(mes).padStart(2, "0") + "-" +
+    String(dia).padStart(2, "0")
+  );
+}
+
+
+function alunoEmPausaSemCobranca(aluno) {
+  return (
+    statusAtualAluno(aluno) === "pausa" &&
+    aluno.cobrarDurantePausa === "nao"
+  );
+}
+
+
 function abrirCadastroAluno() {
   document.getElementById("formAluno").style.display = "block";
 }
@@ -547,6 +592,14 @@ function registrarCobrancaQuinzenal(alunoId, quinzena) {
 
   if (!aluno) return;
 
+  if (alunoEmPausaSemCobranca(aluno)) {
+    alert(
+      "Este aluno está em pausa sem cobrança. " +
+      "Não será lançada cobrança quinzenal durante a pausa."
+    );
+    return;
+  }
+
   const existente =
     obterCobrancaQuinzena(alunoId, quinzena);
 
@@ -634,6 +687,14 @@ function registrarCobrancaMensal(alunoId) {
     );
 
   if (!aluno) return;
+
+  if (alunoEmPausaSemCobranca(aluno)) {
+    alert(
+      "Este aluno está em pausa sem cobrança. " +
+      "Não será lançada mensalidade durante a pausa."
+    );
+    return;
+  }
 
   const existente =
     obterCobrancaMensal(alunoId);
@@ -761,25 +822,45 @@ function pausarAluno(alunoId) {
   const aluno = alunos.find(a => Number(a.id) === Number(alunoId));
   if (!aluno) return;
 
-  const hoje = new Date().toISOString().slice(0, 10);
+  const hojeISO = new Date().toISOString().slice(0, 10);
+  const hojeBrasil = formatarData(hojeISO);
 
-  const inicio = prompt(
-    "Início da pausa (AAAA-MM-DD):",
-    hoje
+  const inicioDigitado = prompt(
+    "Início da pausa (DD/MM/AAAA):",
+    hojeBrasil
   );
 
-  if (inicio === null) return;
+  if (inicioDigitado === null) return;
+
+  const inicio = converterDataBrasilParaISO(inicioDigitado);
+
   if (!inicio) {
-    alert("Informe a data de início da pausa.");
+    alert("Informe uma data válida no formato DD/MM/AAAA.");
     return;
   }
 
-  const retorno = prompt(
-    "Retorno previsto (AAAA-MM-DD). Se ainda não souber, deixe em branco:",
+  const retornoDigitado = prompt(
+    "Retorno previsto (DD/MM/AAAA). Se ainda não souber, deixe em branco:",
     ""
   );
 
-  if (retorno === null) return;
+  if (retornoDigitado === null) return;
+
+  let retorno = "";
+
+  if (retornoDigitado.trim()) {
+    retorno = converterDataBrasilParaISO(retornoDigitado);
+
+    if (!retorno) {
+      alert("Informe uma data válida no formato DD/MM/AAAA.");
+      return;
+    }
+
+    if (retorno < inicio) {
+      alert("O retorno previsto não pode ser anterior ao início da pausa.");
+      return;
+    }
+  }
 
   const cobrar = confirm(
     "Haverá cobrança normal durante a pausa?\n\n" +
@@ -825,12 +906,20 @@ function inativarAluno(alunoId) {
   );
   if (!confirmar) return;
 
-  const hoje = new Date().toISOString().slice(0, 10);
-  const data = prompt("Data de encerramento (AAAA-MM-DD):", hoje);
+  const hojeISO = new Date().toISOString().slice(0, 10);
+  const hojeBrasil = formatarData(hojeISO);
 
-  if (data === null) return;
+  const dataDigitada = prompt(
+    "Data de encerramento (DD/MM/AAAA):",
+    hojeBrasil
+  );
+
+  if (dataDigitada === null) return;
+
+  const data = converterDataBrasilParaISO(dataDigitada);
+
   if (!data) {
-    alert("Informe a data de encerramento.");
+    alert("Informe uma data válida no formato DD/MM/AAAA.");
     return;
   }
 

@@ -343,6 +343,12 @@
 let alunos =
   JSON.parse(localStorage.getItem("alunos")) || [];
 
+alunos = alunos.map(aluno => ({
+  ...aluno,
+  statusAluno: aluno.statusAluno || "ativo",
+  dataInativacao: aluno.dataInativacao || ""
+}));
+
 let sessoes =
   JSON.parse(localStorage.getItem("sessoes")) || [];
 
@@ -743,6 +749,55 @@ function marcarPacotePago(alunoId) {
   atualizarResumo();
 }
 
+
+function statusAtualAluno(aluno) {
+  return aluno.statusAluno || "ativo";
+}
+
+function inativarAluno(alunoId) {
+  const aluno = alunos.find(a => Number(a.id) === Number(alunoId));
+  if (!aluno) return;
+
+  const confirmar = confirm(
+    "Inativar " + aluno.nome +
+    "? O histórico e os valores já lançados serão mantidos."
+  );
+  if (!confirmar) return;
+
+  const hoje = new Date().toISOString().slice(0, 10);
+  const data = prompt("Data de encerramento (AAAA-MM-DD):", hoje);
+
+  if (data === null) return;
+  if (!data) {
+    alert("Informe a data de encerramento.");
+    return;
+  }
+
+  aluno.statusAluno = "inativo";
+  aluno.dataInativacao = data;
+
+  localStorage.setItem("alunos", JSON.stringify(alunos));
+  atualizarAlunos();
+  atualizarResumo();
+}
+
+function reativarAluno(alunoId) {
+  const aluno = alunos.find(a => Number(a.id) === Number(alunoId));
+  if (!aluno) return;
+
+  const confirmar = confirm(
+    "Reativar " + aluno.nome +
+    "? O aluno voltará a funcionar normalmente."
+  );
+  if (!confirmar) return;
+
+  aluno.statusAluno = "ativo";
+  aluno.dataInativacao = "";
+
+  localStorage.setItem("alunos", JSON.stringify(alunos));
+  atualizarAlunos();
+  atualizarResumo();
+}
 
 function atualizarAlunos() {
 
@@ -1178,6 +1233,21 @@ function atualizarAlunos() {
       sessoesAluno.length +
       "</p>" +
 
+      "<p><strong>Status:</strong> " +
+      (statusAtualAluno(aluno) === "inativo" ? "Inativo" : "Ativo") +
+      "</p>" +
+
+      (statusAtualAluno(aluno) === "inativo"
+        ? "<p>Encerrado em: " +
+          formatarData(aluno.dataInativacao) +
+          "</p>" +
+          "<button class='small-button' onclick='reativarAluno(" +
+          aluno.id +
+          ")'>Reativar aluno</button>"
+        : "<button class='secondary small-button' onclick='inativarAluno(" +
+          aluno.id +
+          ")'>Inativar aluno</button>") +
+
       "<button class='secondary small-button' " +
       "onclick='alternarHistorico(" +
       aluno.id +
@@ -1201,10 +1271,11 @@ function atualizarAlunos() {
     const option =
       document.createElement("option");
 
-    option.value = aluno.id;
-    option.textContent = aluno.nome;
-
-    select.appendChild(option);
+    if (statusAtualAluno(aluno) === "ativo") {
+      option.value = aluno.id;
+      option.textContent = aluno.nome;
+      select.appendChild(option);
+    }
   });
 }
 
@@ -1520,6 +1591,11 @@ function salvarSessao() {
 
   if (!aluno) {
     alert("Selecione um aluno.");
+    return;
+  }
+
+  if (statusAtualAluno(aluno) === "inativo") {
+    alert("Este aluno está inativo. Reative o aluno antes de registrar uma nova sessão.");
     return;
   }
 

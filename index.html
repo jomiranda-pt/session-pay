@@ -583,6 +583,86 @@ function marcarQuinzenaPaga(alunoId, quinzena) {
 }
 
 
+function obterCobrancaMensal(alunoId) {
+
+  const hoje = new Date();
+
+  const mes =
+    hoje.getFullYear() +
+    "-" +
+    String(hoje.getMonth() + 1).padStart(2, "0");
+
+  return cobrancas.find(c =>
+    Number(c.alunoId) === Number(alunoId) &&
+    c.tipo === "mensal" &&
+    c.periodo === mes
+  );
+}
+
+
+function registrarCobrancaMensal(alunoId) {
+
+  const aluno =
+    alunos.find(a =>
+      Number(a.id) === Number(alunoId)
+    );
+
+  if (!aluno) return;
+
+  const existente =
+    obterCobrancaMensal(alunoId);
+
+  if (existente) {
+    alert("Esta mensalidade já foi lançada.");
+    return;
+  }
+
+  const hoje = new Date();
+
+  const mes =
+    hoje.getFullYear() +
+    "-" +
+    String(hoje.getMonth() + 1).padStart(2, "0");
+
+  cobrancas.push({
+    id: Date.now(),
+    alunoId: aluno.id,
+    alunoNome: aluno.nome,
+    tipo: "mensal",
+    periodo: mes,
+    valor: Number(aluno.valorMensal || 0),
+    pagamento: "aberto"
+  });
+
+  localStorage.setItem(
+    "cobrancas",
+    JSON.stringify(cobrancas)
+  );
+
+  atualizarAlunos();
+  atualizarResumo();
+}
+
+
+function marcarMensalidadePaga(alunoId) {
+
+  const cobranca =
+    obterCobrancaMensal(alunoId);
+
+  if (!cobranca) return;
+
+  cobranca.pagamento = "pago";
+
+  localStorage.setItem(
+    "cobrancas",
+    JSON.stringify(cobrancas)
+  );
+
+  atualizarAlunos();
+  atualizarResumo();
+}
+
+
 function atualizarAlunos() {
 
   const lista =
@@ -763,6 +843,56 @@ function atualizarAlunos() {
         "</div>";
     }
 
+    let financeiroMensal = "";
+
+    if (aluno.tipo === "mensal") {
+
+      const mensalidade =
+        obterCobrancaMensal(aluno.id);
+
+      financeiroMensal +=
+        "<div class='quinzena-box'>" +
+        "<strong>Mensalidade do mês atual</strong>";
+
+      if (!mensalidade) {
+
+        financeiroMensal +=
+          "<span class='aberto'>Ainda não lançada</span>" +
+
+          "<button class='small-button' " +
+          "onclick='registrarCobrancaMensal(" +
+          aluno.id +
+          ")'>" +
+          "Lançar " +
+          formatarDinheiro(aluno.valorMensal) +
+          "</button>";
+
+      } else if (
+        mensalidade.pagamento === "pago"
+      ) {
+
+        financeiroMensal +=
+          "<span class='pago'>Pago ✓</span>";
+
+      } else {
+
+        financeiroMensal +=
+          "<span class='aberto'>" +
+          formatarDinheiro(mensalidade.valor) +
+          " — Em aberto</span>" +
+
+          "<button class='small-button' " +
+          "onclick='marcarMensalidadePaga(" +
+          aluno.id +
+          ")'>" +
+          "Marcar como pago" +
+          "</button>";
+      }
+
+      financeiroMensal +=
+        "</div>";
+    }
+
     const card =
       document.createElement("div");
 
@@ -778,6 +908,8 @@ function atualizarAlunos() {
       "</p>" +
 
       financeiroQuinzenal +
+
+      financeiroMensal +
 
       "<p> sessões registradas: " +
       sessoesAluno.length +
@@ -893,6 +1025,10 @@ function salvarSessao() {
     Quinzenal:
     a sessão NÃO gera cobrança.
     O financeiro é controlado pelas quinzenas.
+
+    Mensal:
+    a sessão NÃO gera cobrança.
+    O financeiro é controlado pela mensalidade.
   */
 
   if (

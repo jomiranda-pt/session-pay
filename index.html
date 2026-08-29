@@ -174,6 +174,15 @@
       color: #b45b00;
       font-weight: bold;
     }
+
+    .edicao-sessao {
+      display: none;
+      margin-top: 10px;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      background: #fafafa;
+    }
   </style>
 </head>
 
@@ -834,11 +843,78 @@ function atualizarAlunos() {
           ) +
 
           "<button class='secondary small-button' " +
+          "onclick='abrirEdicaoSessao(" +
+          sessao.id +
+          ")'>" +
+          "Editar" +
+          "</button>" +
+
+          "<button class='secondary small-button' " +
           "onclick='desfazerSessao(" +
           sessao.id +
           ")'>" +
           "Desfazer" +
           "</button>" +
+
+          "<div class='edicao-sessao' id='editar-" +
+          sessao.id +
+          "'>" +
+
+          "<label>Data</label>" +
+          "<input type='date' id='editar-data-" +
+          sessao.id +
+          "' value='" +
+          sessao.data +
+          "'>" +
+
+          "<label>Status</label>" +
+          "<select id='editar-status-" +
+          sessao.id +
+          "'>" +
+          "<option value='realizada'" +
+          (sessao.status === "realizada" ? " selected" : "") +
+          ">Realizada</option>" +
+          "<option value='falta'" +
+          (sessao.status === "falta" ? " selected" : "") +
+          ">Falta</option>" +
+          "<option value='cancelada'" +
+          (sessao.status === "cancelada" ? " selected" : "") +
+          ">Cancelada</option>" +
+          "</select>" +
+
+          "<label>Cobrar?</label>" +
+          "<select id='editar-cobrar-" +
+          sessao.id +
+          "'>" +
+          "<option value='sim'" +
+          (sessao.cobrar === "sim" ? " selected" : "") +
+          ">Sim</option>" +
+          "<option value='nao'" +
+          (sessao.cobrar === "nao" ? " selected" : "") +
+          ">Não</option>" +
+          "</select>" +
+
+          "<label>Pagamento</label>" +
+          "<select id='editar-pagamento-" +
+          sessao.id +
+          "'>" +
+          "<option value='aberto'" +
+          (sessao.pagamento === "aberto" ? " selected" : "") +
+          ">Em aberto</option>" +
+          "<option value='pago'" +
+          (sessao.pagamento === "pago" ? " selected" : "") +
+          ">Pago</option>" +
+          "</select>" +
+
+          "<button class='small-button' onclick='salvarEdicaoSessao(" +
+          sessao.id +
+          ")'>Salvar alterações</button>" +
+
+          "<button class='secondary small-button' onclick='abrirEdicaoSessao(" +
+          sessao.id +
+          ")'>Cancelar</button>" +
+
+          "</div>" +
 
           "</div>";
       });
@@ -1130,6 +1206,132 @@ function atualizarAlunos() {
 
     select.appendChild(option);
   });
+}
+
+
+function abrirEdicaoSessao(sessaoId) {
+
+  const caixa =
+    document.getElementById(
+      "editar-" + sessaoId
+    );
+
+  if (!caixa) return;
+
+  caixa.style.display =
+    caixa.style.display === "block"
+      ? "none"
+      : "block";
+}
+
+
+function salvarEdicaoSessao(sessaoId) {
+
+  const sessao =
+    sessoes.find(s =>
+      Number(s.id) === Number(sessaoId)
+    );
+
+  if (!sessao) return;
+
+  if (sessao.status === "reposicao") {
+    alert(
+      "A reposição vinculada não pode ser transformada por esta edição. " +
+      "Se estiver errada, use Desfazer e registre novamente."
+    );
+    return;
+  }
+
+  const reposicoesLigadas =
+    sessoes.filter(s =>
+      s.status === "reposicao" &&
+      Number(s.faltaOrigemId) === Number(sessaoId)
+    );
+
+  const novaData =
+    document.getElementById(
+      "editar-data-" + sessaoId
+    ).value;
+
+  const novoStatus =
+    document.getElementById(
+      "editar-status-" + sessaoId
+    ).value;
+
+  const novoCobrar =
+    document.getElementById(
+      "editar-cobrar-" + sessaoId
+    ).value;
+
+  const novoPagamento =
+    document.getElementById(
+      "editar-pagamento-" + sessaoId
+    ).value;
+
+  if (!novaData) {
+    alert("Informe a data da sessão.");
+    return;
+  }
+
+  if (
+    reposicoesLigadas.length > 0 &&
+    (
+      novoStatus !== "falta" ||
+      novoCobrar !== "sim"
+    )
+  ) {
+
+    const confirmar =
+      confirm(
+        "Esta falta possui uma reposição vinculada. " +
+        "Com esta alteração, a reposição deixará de ter uma falta cobrada como origem e será removida. Continuar?"
+      );
+
+    if (!confirmar) return;
+
+    const idsReposicoes =
+      new Set(
+        reposicoesLigadas.map(r =>
+          Number(r.id)
+        )
+      );
+
+    sessoes =
+      sessoes.filter(s =>
+        !idsReposicoes.has(Number(s.id))
+      );
+  }
+
+  sessao.data = novaData;
+  sessao.status = novoStatus;
+  sessao.cobrar = novoCobrar;
+  sessao.pagamento = novoPagamento;
+
+  const aluno =
+    alunos.find(a =>
+      Number(a.id) === Number(sessao.alunoId)
+    );
+
+  let novoValor = 0;
+
+  if (
+    aluno &&
+    aluno.tipo === "sessao" &&
+    novoCobrar === "sim"
+  ) {
+    novoValor =
+      Number(aluno.valorSessao || 0);
+  }
+
+  sessao.valor = novoValor;
+
+  localStorage.setItem(
+    "sessoes",
+    JSON.stringify(sessoes)
+  );
+
+  atualizarAlunos();
+  atualizarResumo();
 }
 
 

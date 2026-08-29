@@ -349,7 +349,10 @@ alunos = alunos.map(aluno => ({
   dataInativacao: aluno.dataInativacao || "",
   dataInicioPausa: aluno.dataInicioPausa || "",
   dataRetornoPrevisto: aluno.dataRetornoPrevisto || "",
-  cobrarDurantePausa: aluno.cobrarDurantePausa || ""
+  cobrarDurantePausa: aluno.cobrarDurantePausa || "",
+  cobrancaRetornoModo: aluno.cobrancaRetornoModo || "",
+  cobrancaRetornoValorSessao: Number(aluno.cobrancaRetornoValorSessao || 0),
+  cobrancaRetornoAte: aluno.cobrancaRetornoAte || ""
 }));
 
 let sessoes =
@@ -877,14 +880,110 @@ function pausarAluno(alunoId) {
   atualizarResumo();
 }
 
+function fimPeriodoAtual(aluno, dataISO) {
+  const [ano, mes, dia] = dataISO.split("-").map(Number);
+
+  if (aluno.tipo === "quinzenal") {
+    const fim = dia <= 15 ? 15 : new Date(ano, mes, 0).getDate();
+    return `${ano}-${String(mes).padStart(2,"0")}-${String(fim).padStart(2,"0")}`;
+  }
+
+  const fim = new Date(ano, mes, 0).getDate();
+  return `${ano}-${String(mes).padStart(2,"0")}-${String(fim).padStart(2,"0")}`;
+}
+
+function valorProporcionalRetorno(aluno, dataISO) {
+  const [ano, mes, dia] = dataISO.split("-").map(Number);
+
+  if (aluno.tipo === "mensal") {
+    const fim = new Date(ano, mes, 0).getDate();
+    return Number(aluno.valorMensal || 0) * (fim - dia + 1) / fim;
+  }
+
+  if (aluno.tipo === "quinzenal") {
+    const inicio = dia <= 15 ? 1 : 16;
+    const fim = dia <= 15 ? 15 : new Date(ano, mes, 0).getDate();
+    return Number(aluno.valorQuinzenal || 0) * (fim - dia + 1) / (fim - inicio + 1);
+  }
+
+  return 0;
+}
+
+function criarCobrancaRetornoProporcional(aluno, dataISO) {
+  const valor = valorProporcionalRetorno(aluno, dataISO);
+  if (valor <= 0) return;
+
+  cobrancas.push({
+    id: Date.now(),
+    alunoId: aluno.id,
+    tipo: "retorno_proporcional",
+    referencia: dataISO,
+    valor: Number(valor.toFixed(2)),
+    pagamento: "aberto",
+    descricao: "Retorno de pausa - proporcional"
+  });
+
+  localStorage.setItem("cobrancas", JSON.stringify(cobrancas));
+}
+
 function cancelarPausaAluno(alunoId) {
   const aluno = alunos.find(a => Number(a.id) === Number(alunoId));
   if (!aluno) return;
 
-  const confirmar = confirm(
-    "Encerrar a pausa de " + aluno.nome + " e voltar para Ativo?"
-  );
-  if (!confirmar) return;
+  if (!confirm("Encerrar a pausa de " + aluno.nome + " e voltar para Ativo?")) return;
+
+  const hojeISO = new Date().toISOString().slice(0,10);
+  const retornoDigitado = prompt("Data real do retorno (DD/MM/AAAA):", formatarData(hojeISO));
+  if (retornoDigitado === null) return;
+
+  const dataRetorno = converterDataBrasilParaISO(retornoDigitado);
+  if (!dataRetorno) {
+    alert("Informe uma data válida no formato DD/MM/AAAA.");
+    return;
+  }
+
+  if (aluno.dataInicioPausa && dataRetorno < aluno.dataInicioPausa) {
+    alert("A data de retorno não pode ser anterior ao início da pausa.");
+    return;
+  }
+
+  aluno.cobrancaRetornoModo = "";
+  aluno.cobrancaRetornoValorSessao = 0;
+  aluno.cobrancaRetornoAte = "";
+
+  if (
+    aluno.cobrarDurantePausa === "nao" &&
+    (aluno.tipo === "mensal" || aluno.tipo === "quinzenal")
+  ) {
+    const escolha = prompt(
+      "Como cobrar até o próximo período completo?\n\n" +
+      "1 = Proporcional\n2 = Por sessão realizada\n3 = Não cobrar este período",
+      "1"
+    );
+    if (escolha === null) return;
+
+    if (escolha === "1") {
+      criarCobrancaRetornoProporcional(aluno, dataRetorno);
+      aluno.cobrancaRetornoModo = "proporcional";
+    } else if (escolha === "2") {
+      const digitado = prompt("Valor por sessão durante este período (R$):", "");
+      if (digitado === null) return;
+      const valor = Number(String(digitado).replace(/\./g,"").replace(",","."));
+      if (!valor || valor <= 0) {
+        alert("Informe um valor válido por sessão.");
+        return;
+      }
+      aluno.cobrancaRetornoModo = "sessao";
+      aluno.cobrancaRetornoValorSessao = valor;
+      aluno.cobrancaRetornoAte = fimPeriodoAtual(aluno, dataRetorno);
+    } else if (escolha === "3") {
+      aluno.cobrancaRetornoModo = "proximo_periodo";
+      aluno.cobrancaRetornoAte = fimPeriodoAtual(aluno, dataRetorno);
+    } else {
+      alert("Escolha 1, 2 ou 3.");
+      return;
+    }
+  }
 
   aluno.statusAluno = "ativo";
   aluno.dataInicioPausa = "";
@@ -1833,6 +1932,16 @@ function salvarSessao() {
 
     valor =
       Number(aluno.valorSessao || 0);
+  }
+
+  if (
+    aluno.cobrancaRetornoModo === "sessao" &&
+    aluno.cobrancaRetornoAte &&
+    data <= aluno.cobrancaRetornoAte &&
+    cobrar === "sim" &&
+    status !== "reposicao"
+  ) {
+    valor = Number(aluno.cobrancaRetornoValorSessao || 0);
   }
 
   const sessao = {

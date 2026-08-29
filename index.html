@@ -427,6 +427,24 @@ function alunoEmPausaSemCobranca(aluno) {
 }
 
 
+function periodoAtualBloqueadoAposPausa(aluno) {
+  if (
+    aluno.cobrancaRetornoModo !== "proximo_periodo" ||
+    !aluno.cobrancaRetornoAte
+  ) {
+    return false;
+  }
+
+  const hoje = new Date();
+  const hojeISO =
+    hoje.getFullYear() + "-" +
+    String(hoje.getMonth() + 1).padStart(2, "0") + "-" +
+    String(hoje.getDate()).padStart(2, "0");
+
+  return hojeISO <= aluno.cobrancaRetornoAte;
+}
+
+
 function abrirCadastroAluno() {
   document.getElementById("formAluno").style.display = "block";
 }
@@ -603,6 +621,14 @@ function registrarCobrancaQuinzenal(alunoId, quinzena) {
     return;
   }
 
+  if (periodoAtualBloqueadoAposPausa(aluno)) {
+    alert(
+      "Este aluno retornou da pausa com a opção de não cobrar o restante deste período. " +
+      "A cobrança normal volta na próxima quinzena."
+    );
+    return;
+  }
+
   const existente =
     obterCobrancaQuinzena(alunoId, quinzena);
 
@@ -695,6 +721,14 @@ function registrarCobrancaMensal(alunoId) {
     alert(
       "Este aluno está em pausa sem cobrança. " +
       "Não será lançada mensalidade durante a pausa."
+    );
+    return;
+  }
+
+  if (periodoAtualBloqueadoAposPausa(aluno)) {
+    alert(
+      "Este aluno retornou da pausa com a opção de não cobrar o restante deste período. " +
+      "A mensalidade normal volta no próximo mês."
     );
     return;
   }

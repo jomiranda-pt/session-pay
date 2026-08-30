@@ -865,13 +865,123 @@ function atualizarPainelFerias() {
       ) +
       "<br>Alunos pausados por estas férias: " + total;
 
-    botao.textContent = "Férias em andamento";
-    botao.disabled = true;
+    botao.textContent = "Encerrar férias";
+    botao.disabled = false;
+    botao.onclick = encerrarFeriasProfissional;
   } else {
     status.textContent = "Nenhuma férias ativa.";
     botao.textContent = "Entrar de férias";
     botao.disabled = false;
+    botao.onclick = iniciarFeriasProfissional;
   }
+}
+
+
+
+function encerrarFeriasProfissional() {
+  if (!feriasProfissional || !feriasProfissional.ativa) {
+    alert("Não há férias em andamento.");
+    return;
+  }
+
+  const idsFerias = Array.isArray(feriasProfissional.alunoIds)
+    ? feriasProfissional.alunoIds.map(Number)
+    : [];
+
+  const alunosDasFerias = alunos.filter(aluno =>
+    idsFerias.includes(Number(aluno.id)) &&
+    statusAtualAluno(aluno) === "pausa" &&
+    aluno.pausadoPorFerias
+  );
+
+  if (alunosDasFerias.length === 0) {
+    const confirmarSemAlunos = confirm(
+      "Não há mais alunos pausados por estas férias." +
+      "\n\nDeseja apenas encerrar o período de férias?"
+    );
+
+    if (!confirmarSemAlunos) return;
+
+    feriasProfissional.ativa = false;
+    feriasProfissional.encerradaEm =
+      new Date().toISOString().slice(0, 10);
+
+    salvarFeriasProfissional();
+    atualizarPainelFerias();
+
+    alert("Férias encerradas.");
+    return;
+  }
+
+  const hojeISO = new Date().toISOString().slice(0, 10);
+  const retornoPadrao =
+    feriasProfissional.retornoPrevisto || hojeISO;
+
+  const retornoDigitado = prompt(
+    "Data real de retorno (DD/MM/AAAA):",
+    formatarData(retornoPadrao)
+  );
+
+  if (retornoDigitado === null) return;
+
+  const retorno =
+    converterDataBrasilParaISO(retornoDigitado);
+
+  if (!retorno) {
+    alert("Informe uma data válida no formato DD/MM/AAAA.");
+    return;
+  }
+
+  if (retorno < feriasProfissional.inicio) {
+    alert("A data de retorno não pode ser anterior ao início das férias.");
+    return;
+  }
+
+  const confirmar = confirm(
+    "Encerrar férias em " + formatarData(retorno) + "?" +
+    "\n\n" +
+    alunosDasFerias.length +
+    (alunosDasFerias.length === 1
+      ? " aluno pausado por estas férias será reativado."
+      : " alunos pausados por estas férias serão reativados.") +
+    "\n\nAlunos que já estavam Em pausa antes das férias não serão alterados."
+  );
+
+  if (!confirmar) return;
+
+  alunosDasFerias.forEach(aluno => {
+    aluno.statusAluno = "ativo";
+    aluno.dataInicioPausa = "";
+    aluno.dataRetornoPrevisto = "";
+    aluno.cobrarDurantePausa = "";
+    aluno.pausadoPorFerias = false;
+
+    /*
+      Nesta etapa, apenas reativamos os alunos corretos.
+      A regra financeira especial de retorno será aplicada na próxima etapa,
+      reutilizando a lógica já aprovada de retorno da pausa.
+    */
+  });
+
+  feriasProfissional.ativa = false;
+  feriasProfissional.retornoReal = retorno;
+  feriasProfissional.encerradaEm =
+    new Date().toISOString().slice(0, 10);
+
+  localStorage.setItem("alunos", JSON.stringify(alunos));
+  salvarFeriasProfissional();
+
+  atualizarAlunos();
+  atualizarResumo();
+  atualizarPainelFerias();
+
+  alert(
+    "Férias encerradas. " +
+    alunosDasFerias.length +
+    (alunosDasFerias.length === 1
+      ? " aluno foi reativado."
+      : " alunos foram reativados.")
+  );
 }
 
 

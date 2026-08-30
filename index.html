@@ -1474,6 +1474,229 @@ function reativarAluno(alunoId) {
 }
 
 
+
+function editarAluno(alunoId) {
+  const aluno = alunos.find(
+    a => Number(a.id) === Number(alunoId)
+  );
+
+  if (!aluno) return;
+
+  const nomeNovo = prompt(
+    "Nome do aluno:",
+    aluno.nome
+  );
+
+  if (nomeNovo === null) return;
+
+  const nome = nomeNovo.trim();
+
+  if (!nome) {
+    alert("O nome do aluno não pode ficar em branco.");
+    return;
+  }
+
+  const tipoAtual = aluno.tipo || "sessao";
+
+  const tipoDigitado = prompt(
+    "Forma de cobrança:\n\n" +
+    "1 = Por sessão\n" +
+    "2 = Quinzenal\n" +
+    "3 = Mensal\n" +
+    "4 = Pacote",
+    tipoAtual === "sessao" ? "1" :
+    tipoAtual === "quinzenal" ? "2" :
+    tipoAtual === "mensal" ? "3" : "4"
+  );
+
+  if (tipoDigitado === null) return;
+
+  const mapaTipos = {
+    "1": "sessao",
+    "2": "quinzenal",
+    "3": "mensal",
+    "4": "pacote"
+  };
+
+  const novoTipo = mapaTipos[tipoDigitado];
+
+  if (!novoTipo) {
+    alert("Escolha 1, 2, 3 ou 4.");
+    return;
+  }
+
+  if (novoTipo !== tipoAtual) {
+    const confirmarMudanca = confirm(
+      "Alterar a forma de cobrança de " +
+      descricaoAluno(aluno) +
+      "?\n\n" +
+      "O histórico e os valores já lançados serão preservados. " +
+      "A nova forma de cobrança valerá para os próximos lançamentos."
+    );
+
+    if (!confirmarMudanca) return;
+  }
+
+  let valorSessao = Number(aluno.valorSessao || 0);
+  let valorQuinzenal = Number(aluno.valorQuinzenal || 0);
+  let valorMensal = Number(aluno.valorMensal || 0);
+  let quantidadePacote = Number(aluno.quantidadePacote || 0);
+  let valorPacote = Number(aluno.valorPacote || 0);
+
+  if (novoTipo === "sessao") {
+    const digitado = prompt(
+      "Valor por sessão (R$):",
+      novoTipo === tipoAtual
+        ? String(valorSessao).replace(".", ",")
+        : ""
+    );
+
+    if (digitado === null) return;
+
+    valorSessao = numeroMonetarioDigitado(digitado);
+
+    if (valorSessao === null || valorSessao < 0) {
+      alert("Informe um valor válido.");
+      return;
+    }
+  }
+
+  if (novoTipo === "quinzenal") {
+    const digitado = prompt(
+      "Valor quinzenal (R$):",
+      novoTipo === tipoAtual
+        ? String(valorQuinzenal).replace(".", ",")
+        : ""
+    );
+
+    if (digitado === null) return;
+
+    valorQuinzenal = numeroMonetarioDigitado(digitado);
+
+    if (valorQuinzenal === null || valorQuinzenal < 0) {
+      alert("Informe um valor válido.");
+      return;
+    }
+  }
+
+  if (novoTipo === "mensal") {
+    const digitado = prompt(
+      "Valor mensal (R$):",
+      novoTipo === tipoAtual
+        ? String(valorMensal).replace(".", ",")
+        : ""
+    );
+
+    if (digitado === null) return;
+
+    valorMensal = numeroMonetarioDigitado(digitado);
+
+    if (valorMensal === null || valorMensal < 0) {
+      alert("Informe um valor válido.");
+      return;
+    }
+  }
+
+  if (novoTipo === "pacote") {
+    const qtdDigitada = prompt(
+      "Quantidade de sessões no pacote:",
+      novoTipo === tipoAtual
+        ? String(quantidadePacote || "")
+        : ""
+    );
+
+    if (qtdDigitada === null) return;
+
+    quantidadePacote = Number(qtdDigitada);
+
+    if (
+      !Number.isInteger(quantidadePacote) ||
+      quantidadePacote <= 0
+    ) {
+      alert("Informe uma quantidade válida de sessões.");
+      return;
+    }
+
+    const valorDigitado = prompt(
+      "Valor total do pacote (R$):",
+      novoTipo === tipoAtual
+        ? String(valorPacote).replace(".", ",")
+        : ""
+    );
+
+    if (valorDigitado === null) return;
+
+    valorPacote = numeroMonetarioDigitado(valorDigitado);
+
+    if (valorPacote === null || valorPacote < 0) {
+      alert("Informe um valor válido para o pacote.");
+      return;
+    }
+
+    valorSessao =
+      quantidadePacote > 0
+        ? valorPacote / quantidadePacote
+        : 0;
+  }
+
+  aluno.nome = nome;
+  aluno.tipo = novoTipo;
+
+  aluno.valorSessao =
+    novoTipo === "sessao" || novoTipo === "pacote"
+      ? valorSessao
+      : 0;
+
+  aluno.valorQuinzenal =
+    novoTipo === "quinzenal"
+      ? valorQuinzenal
+      : 0;
+
+  aluno.valorMensal =
+    novoTipo === "mensal"
+      ? valorMensal
+      : 0;
+
+  aluno.quantidadePacote =
+    novoTipo === "pacote"
+      ? quantidadePacote
+      : 0;
+
+  aluno.valorPacote =
+    novoTipo === "pacote"
+      ? valorPacote
+      : 0;
+
+  localStorage.setItem(
+    "alunos",
+    JSON.stringify(alunos)
+  );
+
+  atualizarAlunos();
+  atualizarResumo();
+
+  alert(
+    "Cadastro atualizado. O histórico anterior foi preservado."
+  );
+}
+
+
+function numeroMonetarioDigitado(valor) {
+  const texto = String(valor || "").trim();
+
+  if (!texto) return null;
+
+  const normalizado =
+    texto.includes(",")
+      ? texto.replace(/\./g, "").replace(",", ".")
+      : texto;
+
+  const numero = Number(normalizado);
+
+  return Number.isFinite(numero) ? numero : null;
+}
+
+
 function resumoFinanceiroAluno(aluno) {
   const sessoesAluno = sessoes.filter(
     s => Number(s.alunoId) === Number(aluno.id)
@@ -1484,15 +1707,9 @@ function resumoFinanceiroAluno(aluno) {
   );
 
   const sessoesFinanceiras =
-    aluno.tipo === "sessao"
-      ? sessoesAluno.filter(s =>
-          s.cobrar === "sim" &&
-          Number(s.valor || 0) > 0
-        )
-      : sessoesAluno.filter(s =>
-          Number(s.valor || 0) > 0 &&
-          s.cobrancaRetornoTemporaria === true
-        );
+    sessoesAluno.filter(s =>
+      Number(s.valor || 0) > 0
+    );
 
   const totalSessoes = sessoesFinanceiras.reduce(
     (soma, s) => soma + Number(s.valor || 0),
@@ -2033,6 +2250,13 @@ function atualizarAlunos() {
             "<button class='secondary small-button' onclick='inativarAluno(" +
             aluno.id +
             ")'>Inativar aluno</button>") +
+
+      "<button class='secondary small-button' " +
+      "onclick='editarAluno(" +
+      aluno.id +
+      ")'>" +
+      "Editar aluno" +
+      "</button>" +
 
       "<button class='secondary small-button' " +
       "onclick='alternarHistorico(" +

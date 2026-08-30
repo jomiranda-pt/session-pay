@@ -1007,18 +1007,25 @@ function encerrarFeriasProfissional() {
           const diasCobrados =
             Math.round((dataFim - dataRetorno) / 86400000) + 1;
 
+          const valorBase =
+            tipo === "mensal"
+              ? Number(aluno.valorMensal || 0)
+              : Number(aluno.valorQuinzenal || 0);
+
           const valorProporcional =
-            Number(aluno.valor || 0) * diasCobrados / diasPeriodo;
+            valorBase * diasCobrados / diasPeriodo;
 
           cobrancas.push({
             id: Date.now() + Math.random(),
             alunoId: aluno.id,
+            alunoNome: aluno.nome,
             tipo: "retorno_proporcional",
             referencia:
               "Retorno de férias " + formatarData(retorno),
             data: retorno,
             valor: Number(valorProporcional.toFixed(2)),
-            pago: false
+            pagamento: "aberto",
+            descricao: "Retorno de férias - proporcional"
           });
 
           aluno.cobrancaRetornoModo = "";

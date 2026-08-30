@@ -224,6 +224,14 @@
     </div>
   </section>
 
+  <section class="summary" id="painelFerias">
+    <h2>Férias do profissional</h2>
+    <div id="statusFerias">Nenhuma férias ativa.</div>
+    <button id="botaoFerias" class="secondary" onclick="iniciarFeriasProfissional()">
+      Entrar de férias
+    </button>
+  </section>
+
   <h2>Alunos</h2>
 
   <div id="listaAlunos"></div>
@@ -352,8 +360,12 @@ alunos = alunos.map(aluno => ({
   cobrarDurantePausa: aluno.cobrarDurantePausa || "",
   cobrancaRetornoModo: aluno.cobrancaRetornoModo || "",
   cobrancaRetornoValorSessao: Number(aluno.cobrancaRetornoValorSessao || 0),
-  cobrancaRetornoAte: aluno.cobrancaRetornoAte || ""
+  cobrancaRetornoAte: aluno.cobrancaRetornoAte || "",
+  pausadoPorFerias: aluno.pausadoPorFerias || false
 }));
+
+let feriasProfissional =
+  JSON.parse(localStorage.getItem("feriasProfissional")) || null;
 
 let sessoes =
   JSON.parse(localStorage.getItem("sessoes")) || [];
@@ -818,6 +830,156 @@ function marcarPacotePago(alunoId) {
 }
 
 
+
+function salvarFeriasProfissional() {
+  if (feriasProfissional) {
+    localStorage.setItem(
+      "feriasProfissional",
+      JSON.stringify(feriasProfissional)
+    );
+  } else {
+    localStorage.removeItem("feriasProfissional");
+  }
+}
+
+
+function atualizarPainelFerias() {
+  const status = document.getElementById("statusFerias");
+  const botao = document.getElementById("botaoFerias");
+
+  if (!status || !botao) return;
+
+  if (feriasProfissional && feriasProfissional.ativa) {
+    const total = Array.isArray(feriasProfissional.alunoIds)
+      ? feriasProfissional.alunoIds.length
+      : 0;
+
+    status.innerHTML =
+      "<strong>Férias em andamento</strong><br>" +
+      "Início: " + formatarData(feriasProfissional.inicio) + "<br>" +
+      "Retorno previsto: " +
+      (
+        feriasProfissional.retornoPrevisto
+          ? formatarData(feriasProfissional.retornoPrevisto)
+          : "não informado"
+      ) +
+      "<br>Alunos pausados por estas férias: " + total;
+
+    botao.textContent = "Férias em andamento";
+    botao.disabled = true;
+  } else {
+    status.textContent = "Nenhuma férias ativa.";
+    botao.textContent = "Entrar de férias";
+    botao.disabled = false;
+  }
+}
+
+
+function iniciarFeriasProfissional() {
+  if (feriasProfissional && feriasProfissional.ativa) {
+    alert("Já existe um período de férias em andamento.");
+    return;
+  }
+
+  const alunosAtivos =
+    alunos.filter(aluno => statusAtualAluno(aluno) === "ativo");
+
+  if (alunosAtivos.length === 0) {
+    alert("Não há alunos ativos para pausar.");
+    return;
+  }
+
+  const hojeISO = new Date().toISOString().slice(0, 10);
+  const hojeBrasil = formatarData(hojeISO);
+
+  const inicioDigitado = prompt(
+    "Início das férias (DD/MM/AAAA):",
+    hojeBrasil
+  );
+
+  if (inicioDigitado === null) return;
+
+  const inicio =
+    converterDataBrasilParaISO(inicioDigitado);
+
+  if (!inicio) {
+    alert("Informe uma data válida no formato DD/MM/AAAA.");
+    return;
+  }
+
+  const retornoDigitado = prompt(
+    "Retorno previsto (DD/MM/AAAA). Se ainda não souber, deixe em branco:",
+    ""
+  );
+
+  if (retornoDigitado === null) return;
+
+  let retorno = "";
+
+  if (retornoDigitado.trim()) {
+    retorno =
+      converterDataBrasilParaISO(retornoDigitado);
+
+    if (!retorno) {
+      alert("Informe uma data válida no formato DD/MM/AAAA.");
+      return;
+    }
+
+    if (retorno < inicio) {
+      alert("O retorno previsto não pode ser anterior ao início das férias.");
+      return;
+    }
+  }
+
+  const confirmar = confirm(
+    alunosAtivos.length +
+    (alunosAtivos.length === 1
+      ? " aluno ativo será colocado em pausa."
+      : " alunos ativos serão colocados em pausa.") +
+    "\n\nAlunos que já estão Em pausa ou Inativos não serão alterados." +
+    "\n\nDurante as férias, esses alunos ficarão pausados sem cobrança normal." +
+    "\n\nDeseja continuar?"
+  );
+
+  if (!confirmar) return;
+
+  const idsPausados = [];
+
+  alunosAtivos.forEach(aluno => {
+    aluno.statusAluno = "pausa";
+    aluno.dataInicioPausa = inicio;
+    aluno.dataRetornoPrevisto = retorno || "";
+    aluno.cobrarDurantePausa = "nao";
+    aluno.pausadoPorFerias = true;
+
+    idsPausados.push(aluno.id);
+  });
+
+  feriasProfissional = {
+    id: Date.now(),
+    ativa: true,
+    inicio: inicio,
+    retornoPrevisto: retorno || "",
+    alunoIds: idsPausados
+  };
+
+  localStorage.setItem("alunos", JSON.stringify(alunos));
+  salvarFeriasProfissional();
+
+  atualizarAlunos();
+  atualizarResumo();
+  atualizarPainelFerias();
+
+  alert(
+    "Férias registradas. " +
+    idsPausados.length +
+    (idsPausados.length === 1
+      ? " aluno ativo foi pausado."
+      : " alunos ativos foram pausados.")
+  );
+}
+
+
 function statusAtualAluno(aluno) {
   return aluno.statusAluno || "ativo";
 }
@@ -875,6 +1037,7 @@ function pausarAluno(alunoId) {
   aluno.dataInicioPausa = inicio;
   aluno.dataRetornoPrevisto = retorno || "";
   aluno.cobrarDurantePausa = cobrar ? "sim" : "nao";
+  aluno.pausadoPorFerias = false;
 
   localStorage.setItem("alunos", JSON.stringify(alunos));
   atualizarAlunos();
@@ -988,9 +1151,26 @@ function cancelarPausaAluno(alunoId) {
   aluno.dataRetornoPrevisto = "";
   aluno.cobrarDurantePausa = "";
 
+  if (aluno.pausadoPorFerias) {
+    aluno.pausadoPorFerias = false;
+
+    if (
+      feriasProfissional &&
+      Array.isArray(feriasProfissional.alunoIds)
+    ) {
+      feriasProfissional.alunoIds =
+        feriasProfissional.alunoIds.filter(
+          id => Number(id) !== Number(aluno.id)
+        );
+
+      salvarFeriasProfissional();
+    }
+  }
+
   localStorage.setItem("alunos", JSON.stringify(alunos));
   atualizarAlunos();
   atualizarResumo();
+  atualizarPainelFerias();
 }
 
 function inativarAluno(alunoId) {
@@ -1508,6 +1688,9 @@ function atualizarAlunos() {
             "<p>Cobrar durante a pausa: " +
             (aluno.cobrarDurantePausa === "sim" ? "Sim" : "Não") +
             "</p>" +
+            (aluno.pausadoPorFerias
+              ? "<p><strong>Motivo:</strong> Férias do profissional</p>"
+              : "") +
             "<button class='small-button' onclick='cancelarPausaAluno(" +
             aluno.id +
             ")'>Encerrar pausa</button>"
@@ -2052,13 +2235,16 @@ function limparDadosTeste() {
   alunos = [];
   sessoes = [];
   cobrancas = [];
+  feriasProfissional = null;
 
   localStorage.removeItem("alunos");
   localStorage.removeItem("sessoes");
   localStorage.removeItem("cobrancas");
+  localStorage.removeItem("feriasProfissional");
 
   atualizarAlunos();
   atualizarResumo();
+  atualizarPainelFerias();
 
   alert("Dados de teste apagados.");
 }
@@ -2066,6 +2252,7 @@ function limparDadosTeste() {
 
 atualizarAlunos();
 atualizarResumo();
+atualizarPainelFerias();
 
 </script>
 

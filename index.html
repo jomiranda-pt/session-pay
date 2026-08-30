@@ -330,19 +330,20 @@
       <option value="pago">Pago</option>
     </select>
 
-    <label>Aula em dupla?</label>
-    <select id="aulaDupla" onchange="atualizarCampoDupla()">
+    <label>Alterar valor desta sessão?</label>
+    <select id="alterarValorSessao" onchange="atualizarCampoValorExcepcional()">
       <option value="nao">Não</option>
       <option value="sim">Sim</option>
     </select>
 
-    <div id="campoDupla" style="display:none">
-      <label>Com quem? (opcional)</label>
-      <input type="text" id="nomeDupla" placeholder="Ex.: Carlos">
+    <div id="campoValorExcepcional" style="display:none">
+      <label>Novo valor</label>
+      <input type="number" id="valorExcepcional" min="0" step="0.01"
+        placeholder="Valor somente desta sessão">
 
-      <label>Valor desta sessão</label>
-      <input type="number" id="valorDupla" min="0" step="0.01"
-        placeholder="Valor excepcional desta aula">
+      <label>Motivo (opcional)</label>
+      <input type="text" id="motivoValorExcepcional"
+        placeholder="Ex.: aula em dupla, trilha, aula mais curta">
     </div>
 
     <button onclick="salvarSessao()">
@@ -1560,10 +1561,13 @@ function atualizarAlunos() {
           ) +
 
           (
-            sessao.aulaDupla
+            sessao.valorExcepcional !== null &&
+            sessao.valorExcepcional !== undefined
             ?
-            "<div class='sessao-detalhe'><strong>Aula em dupla</strong>" +
-            (sessao.nomeDupla ? " com " + sessao.nomeDupla : "") +
+            "<div class='sessao-detalhe'><strong>Valor excepcional</strong>" +
+            (sessao.motivoValorExcepcional
+              ? " — " + sessao.motivoValorExcepcional
+              : "") +
             "</div>"
             :
             ""
@@ -2287,14 +2291,16 @@ function abrirFormulario() {
 }
 
 
-function atualizarCampoDupla() {
-  const dupla = document.getElementById("aulaDupla").value === "sim";
-  document.getElementById("campoDupla").style.display =
-    dupla ? "block" : "none";
+function atualizarCampoValorExcepcional() {
+  const alterar =
+    document.getElementById("alterarValorSessao").value === "sim";
 
-  if (!dupla) {
-    document.getElementById("nomeDupla").value = "";
-    document.getElementById("valorDupla").value = "";
+  document.getElementById("campoValorExcepcional").style.display =
+    alterar ? "block" : "none";
+
+  if (!alterar) {
+    document.getElementById("valorExcepcional").value = "";
+    document.getElementById("motivoValorExcepcional").value = "";
   }
 }
 
@@ -2338,25 +2344,31 @@ function salvarSessao() {
   const pagamento =
     document.getElementById("pagamento").value;
 
-  const aulaDupla =
-    document.getElementById("aulaDupla").value === "sim";
+  const alterarValorSessao =
+    document.getElementById("alterarValorSessao").value === "sim";
 
-  const nomeDupla =
-    aulaDupla
-      ? document.getElementById("nomeDupla").value.trim()
+  const motivoValorExcepcional =
+    alterarValorSessao
+      ? document.getElementById("motivoValorExcepcional").value.trim()
       : "";
 
-  const valorDuplaDigitado =
-    aulaDupla
-      ? document.getElementById("valorDupla").value
+  const valorExcepcionalDigitado =
+    alterarValorSessao
+      ? document.getElementById("valorExcepcional").value
       : "";
 
-  let valorDupla = null;
+  let valorExcepcional = null;
 
-  if (aulaDupla && valorDuplaDigitado !== "") {
-    valorDupla = Number(valorDuplaDigitado);
-    if (!Number.isFinite(valorDupla) || valorDupla < 0) {
-      alert("Informe um valor válido para esta aula em dupla.");
+  if (alterarValorSessao) {
+    if (valorExcepcionalDigitado === "") {
+      alert("Informe o novo valor desta sessão.");
+      return;
+    }
+
+    valorExcepcional = Number(valorExcepcionalDigitado);
+
+    if (!Number.isFinite(valorExcepcional) || valorExcepcional < 0) {
+      alert("Informe um valor válido para esta sessão.");
       return;
     }
   }
@@ -2417,12 +2429,12 @@ function salvarSessao() {
   }
 
   if (
-    aulaDupla &&
-    valorDupla !== null &&
+    alterarValorSessao &&
+    valorExcepcional !== null &&
     cobrar === "sim" &&
     status !== "reposicao"
   ) {
-    valor = valorDupla;
+    valor = valorExcepcional;
   }
 
   const sessao = {
@@ -2435,9 +2447,9 @@ function salvarSessao() {
     pagamento,
     valor,
     faltaOrigemId,
-    aulaDupla,
-    nomeDupla,
-    valorDupla
+    valorExcepcional:
+      alterarValorSessao ? valorExcepcional : null,
+    motivoValorExcepcional
   };
 
   sessoes.push(sessao);
@@ -2450,10 +2462,10 @@ function salvarSessao() {
   document.getElementById("mensagemSessao").style.display =
     "block";
 
-  document.getElementById("aulaDupla").value = "nao";
-  document.getElementById("nomeDupla").value = "";
-  document.getElementById("valorDupla").value = "";
-  atualizarCampoDupla();
+  document.getElementById("alterarValorSessao").value = "nao";
+  document.getElementById("valorExcepcional").value = "";
+  document.getElementById("motivoValorExcepcional").value = "";
+  atualizarCampoValorExcepcional();
 
   atualizarAlunos();
   atualizarResumo();

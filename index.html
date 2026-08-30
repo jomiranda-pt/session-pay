@@ -1473,6 +1473,59 @@ function reativarAluno(alunoId) {
   atualizarResumo();
 }
 
+
+function resumoFinanceiroAluno(aluno) {
+  const sessoesAluno = sessoes.filter(
+    s => Number(s.alunoId) === Number(aluno.id)
+  );
+
+  const cobrancasAluno = cobrancas.filter(
+    c => Number(c.alunoId) === Number(aluno.id)
+  );
+
+  const sessoesFinanceiras =
+    aluno.tipo === "sessao"
+      ? sessoesAluno.filter(s =>
+          s.cobrar === "sim" &&
+          Number(s.valor || 0) > 0
+        )
+      : sessoesAluno.filter(s =>
+          Number(s.valor || 0) > 0 &&
+          s.cobrancaRetornoTemporaria === true
+        );
+
+  const totalSessoes = sessoesFinanceiras.reduce(
+    (soma, s) => soma + Number(s.valor || 0),
+    0
+  );
+
+  const pagoSessoes = sessoesFinanceiras
+    .filter(s => s.pagamento === "pago")
+    .reduce(
+      (soma, s) => soma + Number(s.valor || 0),
+      0
+    );
+
+  const totalCobrancas = cobrancasAluno.reduce(
+    (soma, c) => soma + Number(c.valor || 0),
+    0
+  );
+
+  const pagoCobrancas = cobrancasAluno
+    .filter(c => c.pagamento === "pago")
+    .reduce(
+      (soma, c) => soma + Number(c.valor || 0),
+      0
+    );
+
+  const total = totalSessoes + totalCobrancas;
+  const pago = pagoSessoes + pagoCobrancas;
+  const aberto = Math.max(total - pago, 0);
+
+  return { total, pago, aberto };
+}
+
+
 function atualizarAlunos() {
 
   const lista =
@@ -1909,6 +1962,25 @@ function atualizarAlunos() {
       "<p>" +
       descricaoAluno(aluno) +
       "</p>" +
+
+      (() => {
+        const resumo = resumoFinanceiroAluno(aluno);
+
+        return (
+          "<div class='quinzena-box'>" +
+          "<strong>Financeiro</strong>" +
+          "<div class='sessao-detalhe'>Total: " +
+          formatarDinheiro(resumo.total) +
+          "</div>" +
+          "<div class='sessao-detalhe'>Pago: " +
+          formatarDinheiro(resumo.pago) +
+          "</div>" +
+          "<div class='sessao-detalhe'>Em aberto: " +
+          formatarDinheiro(resumo.aberto) +
+          "</div>" +
+          "</div>"
+        );
+      })() +
 
       financeiroQuinzenal +
 

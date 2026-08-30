@@ -330,6 +330,21 @@
       <option value="pago">Pago</option>
     </select>
 
+    <label>Aula em dupla?</label>
+    <select id="aulaDupla" onchange="atualizarCampoDupla()">
+      <option value="nao">Não</option>
+      <option value="sim">Sim</option>
+    </select>
+
+    <div id="campoDupla" style="display:none">
+      <label>Com quem? (opcional)</label>
+      <input type="text" id="nomeDupla" placeholder="Ex.: Carlos">
+
+      <label>Valor desta sessão</label>
+      <input type="number" id="valorDupla" min="0" step="0.01"
+        placeholder="Valor excepcional desta aula">
+    </div>
+
     <button onclick="salvarSessao()">
       Salvar sessão
     </button>
@@ -1545,6 +1560,16 @@ function atualizarAlunos() {
           ) +
 
           (
+            sessao.aulaDupla
+            ?
+            "<div class='sessao-detalhe'><strong>Aula em dupla</strong>" +
+            (sessao.nomeDupla ? " com " + sessao.nomeDupla : "") +
+            "</div>"
+            :
+            ""
+          ) +
+
+          (
             Number(sessao.valor || 0) > 0
             ?
             "<div class='sessao-detalhe'>" +
@@ -2262,6 +2287,18 @@ function abrirFormulario() {
 }
 
 
+function atualizarCampoDupla() {
+  const dupla = document.getElementById("aulaDupla").value === "sim";
+  document.getElementById("campoDupla").style.display =
+    dupla ? "block" : "none";
+
+  if (!dupla) {
+    document.getElementById("nomeDupla").value = "";
+    document.getElementById("valorDupla").value = "";
+  }
+}
+
+
 function salvarSessao() {
 
   const alunoId =
@@ -2300,6 +2337,29 @@ function salvarSessao() {
 
   const pagamento =
     document.getElementById("pagamento").value;
+
+  const aulaDupla =
+    document.getElementById("aulaDupla").value === "sim";
+
+  const nomeDupla =
+    aulaDupla
+      ? document.getElementById("nomeDupla").value.trim()
+      : "";
+
+  const valorDuplaDigitado =
+    aulaDupla
+      ? document.getElementById("valorDupla").value
+      : "";
+
+  let valorDupla = null;
+
+  if (aulaDupla && valorDuplaDigitado !== "") {
+    valorDupla = Number(valorDuplaDigitado);
+    if (!Number.isFinite(valorDupla) || valorDupla < 0) {
+      alert("Informe um valor válido para esta aula em dupla.");
+      return;
+    }
+  }
 
   let faltaOrigemId = null;
 
@@ -2356,6 +2416,15 @@ function salvarSessao() {
     valor = Number(aluno.cobrancaRetornoValorSessao || 0);
   }
 
+  if (
+    aulaDupla &&
+    valorDupla !== null &&
+    cobrar === "sim" &&
+    status !== "reposicao"
+  ) {
+    valor = valorDupla;
+  }
+
   const sessao = {
     id: Date.now(),
     alunoId: aluno.id,
@@ -2365,7 +2434,10 @@ function salvarSessao() {
     cobrar,
     pagamento,
     valor,
-    faltaOrigemId
+    faltaOrigemId,
+    aulaDupla,
+    nomeDupla,
+    valorDupla
   };
 
   sessoes.push(sessao);
@@ -2377,6 +2449,11 @@ function salvarSessao() {
 
   document.getElementById("mensagemSessao").style.display =
     "block";
+
+  document.getElementById("aulaDupla").value = "nao";
+  document.getElementById("nomeDupla").value = "";
+  document.getElementById("valorDupla").value = "";
+  atualizarCampoDupla();
 
   atualizarAlunos();
   atualizarResumo();

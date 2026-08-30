@@ -908,14 +908,12 @@ function encerrarFeriasProfissional() {
 
     salvarFeriasProfissional();
     atualizarPainelFerias();
-
     alert("Férias encerradas.");
     return;
   }
 
   const hojeISO = new Date().toISOString().slice(0, 10);
-  const retornoPadrao =
-    feriasProfissional.retornoPrevisto || hojeISO;
+  const retornoPadrao = feriasProfissional.retornoPrevisto || hojeISO;
 
   const retornoDigitado = prompt(
     "Data real de retorno (DD/MM/AAAA):",
@@ -924,8 +922,7 @@ function encerrarFeriasProfissional() {
 
   if (retornoDigitado === null) return;
 
-  const retorno =
-    converterDataBrasilParaISO(retornoDigitado);
+  const retorno = converterDataBrasilParaISO(retornoDigitado);
 
   if (!retorno) {
     alert("Informe uma data válida no formato DD/MM/AAAA.");
@@ -939,8 +936,7 @@ function encerrarFeriasProfissional() {
 
   const confirmar = confirm(
     "Encerrar férias em " + formatarData(retorno) + "?" +
-    "\n\n" +
-    alunosDasFerias.length +
+    "\n\n" + alunosDasFerias.length +
     (alunosDasFerias.length === 1
       ? " aluno pausado por estas férias será reativado."
       : " alunos pausados por estas férias serão reativados.") +
@@ -949,19 +945,138 @@ function encerrarFeriasProfissional() {
 
   if (!confirmar) return;
 
-  alunosDasFerias.forEach(aluno => {
+  /*
+    Para mensal/quinzenal, perguntamos a regra de retorno apenas quando
+    o retorno acontece no meio do período. Por sessão e pacote apenas retomam.
+  */
+  for (const aluno of alunosDasFerias) {
+    const tipo = aluno.tipo;
+
+    if (tipo === "mensal" || tipo === "quinzenal") {
+      let precisaRegraRetorno = false;
+
+      const [ano, mes, dia] = retorno.split("-").map(Number);
+      const ultimoDiaMes = new Date(ano, mes, 0).getDate();
+
+      if (tipo === "mensal") {
+        precisaRegraRetorno = dia > 1;
+      } else {
+        // Quinzenal: períodos 1–15 e 16–fim do mês.
+        precisaRegraRetorno = !(dia === 1 || dia === 16);
+      }
+
+      if (precisaRegraRetorno) {
+        const escolha = prompt(
+          aluno.nome + " — retorno em " + formatarData(retorno) +
+          "\n\nComo cobrar até o próximo período completo?" +
+          "\n1 = Proporcional" +
+          "\n2 = Por sessão realizada",
+          "1"
+        );
+
+        if (escolha === null) {
+          alert("Encerramento das férias cancelado. Nenhuma alteração foi feita.");
+          return;
+        }
+
+        if (escolha !== "1" && escolha !== "2") {
+          alert("Escolha 1 para Proporcional ou 2 para Por sessão realizada.");
+          return;
+        }
+
+        if (escolha === "1") {
+          let inicioPeriodo, fimPeriodo;
+
+          if (tipo === "mensal") {
+            inicioPeriodo = `${ano}-${String(mes).padStart(2,"0")}-01`;
+            fimPeriodo = `${ano}-${String(mes).padStart(2,"0")}-${String(ultimoDiaMes).padStart(2,"0")}`;
+          } else if (dia <= 15) {
+            inicioPeriodo = `${ano}-${String(mes).padStart(2,"0")}-01`;
+            fimPeriodo = `${ano}-${String(mes).padStart(2,"0")}-15`;
+          } else {
+            inicioPeriodo = `${ano}-${String(mes).padStart(2,"0")}-16`;
+            fimPeriodo = `${ano}-${String(mes).padStart(2,"0")}-${String(ultimoDiaMes).padStart(2,"0")}`;
+          }
+
+          const dataInicio = new Date(inicioPeriodo + "T00:00:00");
+          const dataFim = new Date(fimPeriodo + "T00:00:00");
+          const dataRetorno = new Date(retorno + "T00:00:00");
+
+          const diasPeriodo =
+            Math.round((dataFim - dataInicio) / 86400000) + 1;
+          const diasCobrados =
+            Math.round((dataFim - dataRetorno) / 86400000) + 1;
+
+          const valorProporcional =
+            Number(aluno.valor || 0) * diasCobrados / diasPeriodo;
+
+          cobrancas.push({
+            id: Date.now() + Math.random(),
+            alunoId: aluno.id,
+            tipo: "retorno_proporcional",
+            referencia:
+              "Retorno de férias " + formatarData(retorno),
+            data: retorno,
+            valor: Number(valorProporcional.toFixed(2)),
+            pago: false
+          });
+
+          aluno.cobrancaRetornoModo = "";
+          aluno.cobrancaRetornoValorSessao = 0;
+          aluno.cobrancaRetornoAte = "";
+        }
+
+        if (escolha === "2") {
+          const valorDigitado = prompt(
+            aluno.nome +
+            " — valor por sessão durante o retorno temporário (R$):",
+            ""
+          );
+
+          if (valorDigitado === null) {
+            alert("Encerramento das férias cancelado. Nenhuma alteração foi feita.");
+            return;
+          }
+
+          const valorSessao = Number(
+            valorDigitado.replace(",", ".")
+          );
+
+          if (!valorSessao || valorSessao <= 0) {
+            alert("Informe um valor por sessão válido.");
+            return;
+          }
+
+          let fimTemporario;
+
+          if (tipo === "mensal") {
+            fimTemporario =
+              `${ano}-${String(mes).padStart(2,"0")}-${String(ultimoDiaMes).padStart(2,"0")}`;
+          } else if (dia <= 15) {
+            fimTemporario =
+              `${ano}-${String(mes).padStart(2,"0")}-15`;
+          } else {
+            fimTemporario =
+              `${ano}-${String(mes).padStart(2,"0")}-${String(ultimoDiaMes).padStart(2,"0")}`;
+          }
+
+          aluno.cobrancaRetornoModo = "sessao";
+          aluno.cobrancaRetornoValorSessao = valorSessao;
+          aluno.cobrancaRetornoAte = fimTemporario;
+        }
+      } else {
+        aluno.cobrancaRetornoModo = "";
+        aluno.cobrancaRetornoValorSessao = 0;
+        aluno.cobrancaRetornoAte = "";
+      }
+    }
+
     aluno.statusAluno = "ativo";
     aluno.dataInicioPausa = "";
     aluno.dataRetornoPrevisto = "";
     aluno.cobrarDurantePausa = "";
     aluno.pausadoPorFerias = false;
-
-    /*
-      Nesta etapa, apenas reativamos os alunos corretos.
-      A regra financeira especial de retorno será aplicada na próxima etapa,
-      reutilizando a lógica já aprovada de retorno da pausa.
-    */
-  });
+  }
 
   feriasProfissional.ativa = false;
   feriasProfissional.retornoReal = retorno;
@@ -969,6 +1084,7 @@ function encerrarFeriasProfissional() {
     new Date().toISOString().slice(0, 10);
 
   localStorage.setItem("alunos", JSON.stringify(alunos));
+  localStorage.setItem("cobrancas", JSON.stringify(cobrancas));
   salvarFeriasProfissional();
 
   atualizarAlunos();
@@ -976,14 +1092,12 @@ function encerrarFeriasProfissional() {
   atualizarPainelFerias();
 
   alert(
-    "Férias encerradas. " +
-    alunosDasFerias.length +
+    "Férias encerradas. " + alunosDasFerias.length +
     (alunosDasFerias.length === 1
       ? " aluno foi reativado."
       : " alunos foram reativados.")
   );
 }
-
 
 function iniciarFeriasProfissional() {
   if (feriasProfissional && feriasProfissional.ativa) {

@@ -1475,6 +1475,168 @@ function reativarAluno(alunoId) {
 
 
 
+
+function renovarPacote(alunoId) {
+  const aluno = alunos.find(
+    a => Number(a.id) === Number(alunoId)
+  );
+
+  if (!aluno || aluno.tipo !== "pacote") {
+    alert("Este aluno não está em cobrança por pacote.");
+    return;
+  }
+
+  const quantidadeDigitada = prompt(
+    "Quantidade de sessões do novo pacote:",
+    String(aluno.quantidadePacote || "")
+  );
+
+  if (quantidadeDigitada === null) return;
+
+  const quantidade = Number(quantidadeDigitada);
+
+  if (!Number.isInteger(quantidade) || quantidade <= 0) {
+    alert("Informe uma quantidade válida de sessões.");
+    return;
+  }
+
+  const valorDigitado = prompt(
+    "Valor total do novo pacote (R$):",
+    String(aluno.valorPacote || "").replace(".", ",")
+  );
+
+  if (valorDigitado === null) return;
+
+  const valor = numeroMonetarioDigitado(valorDigitado);
+
+  if (valor === null || valor < 0) {
+    alert("Informe um valor válido.");
+    return;
+  }
+
+  const confirmar = confirm(
+    "Renovar pacote?\n\n" +
+    quantidade + " sessões\n" +
+    formatarMoeda(valor) +
+    "\n\nO pacote anterior continuará no histórico."
+  );
+
+  if (!confirmar) return;
+
+  const agora = new Date();
+  const pacoteId = Date.now();
+
+  if (!Array.isArray(aluno.historicoPacotes)) {
+    aluno.historicoPacotes = [];
+  }
+
+  const pacoteAtual = obterResumoPacoteAtual(aluno);
+
+  if (pacoteAtual) {
+    aluno.historicoPacotes.push(pacoteAtual);
+  }
+
+  aluno.quantidadePacote = quantidade;
+  aluno.valorPacote = valor;
+  aluno.valorSessao = quantidade > 0 ? valor / quantidade : 0;
+  aluno.pacoteAtualId = pacoteId;
+  aluno.dataInicioPacote = agora.toISOString().slice(0, 10);
+
+  cobrancas.push({
+    id: Date.now() + Math.floor(Math.random() * 1000),
+    alunoId: aluno.id,
+    alunoNome: aluno.nome,
+    tipo: "pacote",
+    descricao: "Renovação de pacote",
+    valor: valor,
+    pagamento: "aberto",
+    data: agora.toISOString().slice(0, 10),
+    pacoteId: pacoteId,
+    quantidadeSessoes: quantidade
+  });
+
+  localStorage.setItem("alunos", JSON.stringify(alunos));
+  localStorage.setItem("cobrancas", JSON.stringify(cobrancas));
+
+  atualizarAlunos();
+  atualizarResumo();
+
+  alert("Novo pacote iniciado.");
+}
+
+
+function obterResumoPacoteAtual(aluno) {
+  if (aluno.tipo !== "pacote") return null;
+
+  const quantidade = Number(aluno.quantidadePacote || 0);
+  if (!quantidade) return null;
+
+  const pacoteId = aluno.pacoteAtualId || null;
+
+  const sessoesDoPacote = sessoes.filter(s => {
+    if (Number(s.alunoId) !== Number(aluno.id)) return false;
+
+    if (pacoteId && s.pacoteId) {
+      return Number(s.pacoteId) === Number(pacoteId);
+    }
+
+    return (
+      (s.status === "realizada" && s.cobrar === "sim") ||
+      (s.status === "falta" && s.cobrar === "sim")
+    ) && s.status !== "reposicao";
+  });
+
+  const usadas = Math.min(sessoesDoPacote.length, quantidade);
+
+  const cobrancaPacote = cobrancas
+    .filter(c =>
+      Number(c.alunoId) === Number(aluno.id) &&
+      c.tipo === "pacote"
+    )
+    .slice(-1)[0];
+
+  return {
+    id: pacoteId || Date.now(),
+    quantidade: quantidade,
+    usadas: usadas,
+    restantes: Math.max(quantidade - usadas, 0),
+    valor: Number(aluno.valorPacote || 0),
+    pagamento: cobrancaPacote?.pagamento || "aberto",
+    dataInicio: aluno.dataInicioPacote || "",
+    dataFim: new Date().toISOString().slice(0, 10)
+  };
+}
+
+
+function historicoPacotesHtml(aluno) {
+  const historico = Array.isArray(aluno.historicoPacotes)
+    ? aluno.historicoPacotes
+    : [];
+
+  if (!historico.length) return "";
+
+  return (
+    "<div class='quinzena-box'>" +
+      "<strong>Histórico de pacotes</strong>" +
+      historico.slice().reverse().map(p => {
+        const inicio = p.dataInicio ? formatarData(p.dataInicio) : "—";
+        const fim = p.dataFim ? formatarData(p.dataFim) : "—";
+
+        return (
+          "<div class='historico-item'>" +
+            "<strong>Pacote anterior</strong><br>" +
+            inicio + " a " + fim + "<br>" +
+            p.usadas + " de " + p.quantidade + " usadas<br>" +
+            formatarMoeda(Number(p.valor || 0)) + " — " +
+            (p.pagamento === "pago" ? "Pago" : "Em aberto") +
+          "</div>"
+        );
+      }).join("") +
+    "</div>"
+  );
+}
+
+
 function editarAluno(alunoId) {
   const aluno = alunos.find(
     a => Number(a.id) === Number(alunoId)
@@ -2250,6 +2412,16 @@ function atualizarAlunos() {
             "<button class='secondary small-button' onclick='inativarAluno(" +
             aluno.id +
             ")'>Inativar aluno</button>") +
+
+      (aluno.tipo === "pacote"
+        ? "<button class='secondary small-button' " +
+          "onclick='renovarPacote(" +
+          aluno.id +
+          ")'>" +
+          "Renovar pacote" +
+          "</button>" +
+          historicoPacotesHtml(aluno)
+        : "") +
 
       "<button class='secondary small-button' " +
       "onclick='editarAluno(" +

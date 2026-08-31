@@ -783,13 +783,29 @@ function marcarMensalidadePaga(alunoId) {
 
 
 function obterCobrancaPacote(alunoId) {
+  const aluno = alunos.find(
+    a => Number(a.id) === Number(alunoId)
+  );
 
-  return cobrancas.find(c =>
+  if (!aluno) return undefined;
+
+  const cobrancasPacote = cobrancas.filter(c =>
     Number(c.alunoId) === Number(alunoId) &&
     c.tipo === "pacote"
   );
-}
 
+  if (aluno.pacoteAtualId) {
+    const atual = cobrancasPacote.find(c =>
+      Number(c.pacoteId) === Number(aluno.pacoteAtualId)
+    );
+
+    if (atual) return atual;
+  }
+
+  // Compatibilidade com pacotes criados antes da renovação:
+  // usa a cobrança de pacote mais recente.
+  return cobrancasPacote.slice(-1)[0];
+}
 
 function registrarCobrancaPacote(alunoId) {
 
@@ -799,6 +815,18 @@ function registrarCobrancaPacote(alunoId) {
     );
 
   if (!aluno) return;
+
+  if (!aluno.pacoteAtualId) {
+    aluno.pacoteAtualId = Date.now();
+    aluno.dataInicioPacote =
+      aluno.dataInicioPacote || new Date().toISOString().slice(0, 10);
+
+    if (!Array.isArray(aluno.historicoPacotes)) {
+      aluno.historicoPacotes = [];
+    }
+
+    localStorage.setItem("alunos", JSON.stringify(alunos));
+  }
 
   const existente =
     obterCobrancaPacote(alunoId);
@@ -814,7 +842,9 @@ function registrarCobrancaPacote(alunoId) {
     alunoNome: aluno.nome,
     tipo: "pacote",
     valor: Number(aluno.valorPacote || 0),
-    pagamento: "aberto"
+    pagamento: "aberto",
+    pacoteId: aluno.pacoteAtualId,
+    quantidadeSessoes: Number(aluno.quantidadePacote || 0)
   });
 
   localStorage.setItem(
@@ -2255,13 +2285,25 @@ function atualizarAlunos() {
         obterCobrancaPacote(aluno.id);
 
       const sessoesConsumidas =
-        sessoesAluno.filter(sessao =>
-          sessao.cobrar === "sim" &&
-          (
-            sessao.status === "realizada" ||
-            sessao.status === "falta"
-          )
-        ).length;
+        sessoesAluno.filter(sessao => {
+          const consome =
+            sessao.cobrar === "sim" &&
+            (
+              sessao.status === "realizada" ||
+              sessao.status === "falta"
+            );
+
+          if (!consome) return false;
+
+          if (aluno.pacoteAtualId) {
+            return (
+              sessao.pacoteId &&
+              Number(sessao.pacoteId) === Number(aluno.pacoteAtualId)
+            );
+          }
+
+          return true;
+        }).length;
 
       const restantes =
         Math.max(
@@ -2917,7 +2959,11 @@ function salvarSessao() {
     faltaOrigemId,
     valorExcepcional:
       alterarValorSessao ? valorExcepcional : null,
-    motivoValorExcepcional
+    motivoValorExcepcional,
+    pacoteId:
+      aluno.tipo === "pacote"
+        ? (aluno.pacoteAtualId || null)
+        : null
   };
 
   sessoes.push(sessao);

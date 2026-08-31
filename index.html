@@ -1517,7 +1517,7 @@ function renovarPacote(alunoId) {
   const confirmar = confirm(
     "Renovar pacote?\n\n" +
     quantidade + " sessões\n" +
-    formatarMoeda(valor) +
+    formatarDinheiro(valor) +
     "\n\nO pacote anterior continuará no histórico."
   );
 
@@ -1627,7 +1627,7 @@ function historicoPacotesHtml(aluno) {
             "<strong>Pacote anterior</strong><br>" +
             inicio + " a " + fim + "<br>" +
             p.usadas + " de " + p.quantidade + " usadas<br>" +
-            formatarMoeda(Number(p.valor || 0)) + " — " +
+            formatarDinheiro(Number(p.valor || 0)) + " — " +
             (p.pagamento === "pago" ? "Pago" : "Em aberto") +
           "</div>"
         );

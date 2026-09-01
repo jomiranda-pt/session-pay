@@ -232,7 +232,7 @@
     </button>
   </section>
 
-  <h2>Alunos</h2>
+  <h2>Clientes</h2>
 
   <div id="listaAlunos"></div>
 
@@ -242,10 +242,10 @@
 
   <div class="form-box" id="formAluno">
 
-    <h2>Novo aluno</h2>
+    <h2>Novo cliente</h2>
 
     <label>Nome</label>
-    <input type="text" id="nomeAluno" placeholder="Nome do aluno">
+    <input type="text" id="nomeAluno" placeholder="Nome do cliente">
 
     <label>Forma de cobrança</label>
 
@@ -295,7 +295,7 @@
     </button>
 
     <div class="success" id="mensagemAluno">
-      Aluno cadastrado ✓
+      Cliente cadastrado ✓
     </div>
 
   </div>
@@ -308,7 +308,7 @@
 
     <h2>Nova sessão</h2>
 
-    <label>Aluno</label>
+    <label>Cliente</label>
     <select id="aluno" onchange="atualizarCamposSessao()"></select>
 
     <label>Data</label>
@@ -523,7 +523,7 @@ function salvarAluno() {
     document.getElementById("tipoCobranca").value;
 
   if (!nome) {
-    alert("Digite o nome do aluno.");
+    alert("Digite o nome do cliente.");
     return;
   }
 
@@ -695,7 +695,7 @@ function registrarCobrancaQuinzenal(alunoId, quinzena) {
 
   if (alunoEmPausaSemCobranca(aluno)) {
     alert(
-      "Este aluno está em pausa sem cobrança. " +
+      "Este cliente está em pausa sem cobrança. " +
       "Não será lançada cobrança quinzenal durante a pausa."
     );
     return;
@@ -791,7 +791,7 @@ function registrarCobrancaMensal(alunoId) {
 
   if (alunoEmPausaSemCobranca(aluno)) {
     alert(
-      "Este aluno está em pausa sem cobrança. " +
+      "Este cliente está em pausa sem cobrança. " +
       "Não será lançada mensalidade durante a pausa."
     );
     return;
@@ -964,7 +964,7 @@ function apagarCobrancaPacote(alunoId) {
   if (!confirm(
     "Apagar esta cobrança de " +
     formatarDinheiro(Number(cobranca.valor || 0)) +
-    "?\n\nEsta ação não apaga o aluno nem as sessões."
+    "?\n\nEsta ação não apaga o cliente nem as sessões."
   )) return;
 
   cobrancas = cobrancas.filter(c => Number(c.id) !== Number(cobranca.id));
@@ -1007,7 +1007,7 @@ function atualizarPainelFerias() {
           ? formatarData(feriasProfissional.retornoPrevisto)
           : "não informado"
       ) +
-      "<br>Alunos pausados por estas férias: " + total;
+      "<br>Clientes pausados por estas férias: " + total;
 
     botao.textContent = "Encerrar férias";
     botao.disabled = false;
@@ -1040,7 +1040,7 @@ function encerrarFeriasProfissional() {
 
   if (alunosDasFerias.length === 0) {
     const confirmarSemAlunos = confirm(
-      "Não há mais alunos pausados por estas férias." +
+      "Não há mais clientes pausados por estas férias." +
       "\n\nDeseja apenas encerrar o período de férias?"
     );
 
@@ -1082,8 +1082,8 @@ function encerrarFeriasProfissional() {
     "Encerrar férias em " + formatarData(retorno) + "?" +
     "\n\n" + alunosDasFerias.length +
     (alunosDasFerias.length === 1
-      ? " aluno pausado por estas férias será reativado."
-      : " alunos pausados por estas férias serão reativados.") +
+      ? " cliente pausado por estas férias será reativado."
+      : " clientes pausados por estas férias serão reativados.") +
     "\n\nAlunos que já estavam Em pausa antes das férias não serão alterados."
   );
 
@@ -1245,8 +1245,8 @@ function encerrarFeriasProfissional() {
   alert(
     "Férias encerradas. " + alunosDasFerias.length +
     (alunosDasFerias.length === 1
-      ? " aluno foi reativado."
-      : " alunos foram reativados.")
+      ? " cliente foi reativado."
+      : " clientes foram reativados.")
   );
 }
 
@@ -1260,7 +1260,7 @@ function iniciarFeriasProfissional() {
     alunos.filter(aluno => statusAtualAluno(aluno) === "ativo");
 
   if (alunosAtivos.length === 0) {
-    alert("Não há alunos ativos para pausar.");
+    alert("Não há clientes ativos para pausar.");
     return;
   }
 
@@ -1309,10 +1309,10 @@ function iniciarFeriasProfissional() {
   const confirmar = confirm(
     alunosAtivos.length +
     (alunosAtivos.length === 1
-      ? " aluno ativo será colocado em pausa."
-      : " alunos ativos serão colocados em pausa.") +
+      ? " cliente ativo será colocado em pausa."
+      : " clientes ativos serão colocados em pausa.") +
     "\n\nAlunos que já estão Em pausa ou Inativos não serão alterados." +
-    "\n\nDurante as férias, esses alunos ficarão pausados sem cobrança normal." +
+    "\n\nDurante as férias, esses clientes ficarão pausados sem cobrança normal." +
     "\n\nDeseja continuar?"
   );
 
@@ -1349,8 +1349,8 @@ function iniciarFeriasProfissional() {
     "Férias registradas. " +
     idsPausados.length +
     (idsPausados.length === 1
-      ? " aluno ativo foi pausado."
-      : " alunos ativos foram pausados.")
+      ? " cliente ativo foi pausado."
+      : " clientes ativos foram pausados.")
   );
 }
 
@@ -1589,7 +1589,7 @@ function reativarAluno(alunoId) {
 
   const confirmar = confirm(
     "Reativar " + aluno.nome +
-    "? O aluno voltará a funcionar normalmente."
+    "? O cliente voltará a funcionar normalmente."
   );
   if (!confirmar) return;
 
@@ -1608,7 +1608,7 @@ function renovarPacote(alunoId) {
   const aluno = alunos.find(a => Number(a.id) === Number(alunoId));
 
   if (!aluno || aluno.tipo !== "pacote") {
-    alert("Este aluno não está em cobrança por pacote.");
+    alert("Este cliente não está em cobrança por pacote.");
     return;
   }
 
@@ -1951,7 +1951,7 @@ function editarAluno(alunoId) {
   if (!aluno) return;
 
   const nomeNovo = prompt(
-    "Nome do aluno:",
+    "Nome do cliente:",
     aluno.nome
   );
 
@@ -1960,7 +1960,7 @@ function editarAluno(alunoId) {
   const nome = nomeNovo.trim();
 
   if (!nome) {
-    alert("O nome do aluno não pode ficar em branco.");
+    alert("O nome do cliente não pode ficar em branco.");
     return;
   }
 
@@ -2702,7 +2702,7 @@ function atualizarAlunos() {
           "</p>" +
           "<button class='small-button' onclick='reativarAluno(" +
           aluno.id +
-          ")'>Reativar aluno</button>"
+          ")'>Reativar cliente</button>"
 
         : statusAtualAluno(aluno) === "pausa"
           ? "<p>Início da pausa: " +
@@ -2725,10 +2725,10 @@ function atualizarAlunos() {
 
           : "<button class='secondary small-button' onclick='pausarAluno(" +
             aluno.id +
-            ")'>Colocar em pausa</button>" +
+            ")'>Colocar cliente em pausa</button>" +
             "<button class='secondary small-button' onclick='inativarAluno(" +
             aluno.id +
-            ")'>Inativar aluno</button>") +
+            ")'>Inativar cliente</button>") +
 
       (aluno.tipo === "pacote"
         ? "<button class='secondary small-button' " +
@@ -2744,7 +2744,7 @@ function atualizarAlunos() {
       "onclick='editarAluno(" +
       aluno.id +
       ")'>" +
-      "Editar aluno" +
+      "Editar cliente" +
       "</button>" +
 
       "<button class='secondary small-button' " +
@@ -3103,12 +3103,12 @@ function salvarSessao() {
     );
 
   if (!aluno) {
-    alert("Selecione um aluno.");
+    alert("Selecione um cliente.");
     return;
   }
 
   if (statusAtualAluno(aluno) === "inativo") {
-    alert("Este aluno está inativo. Reative o aluno antes de registrar uma nova sessão.");
+    alert("Este cliente está inativo. Reative o cliente antes de registrar uma nova sessão.");
     return;
   }
 

@@ -277,6 +277,17 @@
 
       <label>Valor total do pacote</label>
       <input type="number" id="valorPacote" placeholder="Ex.: 900">
+
+      <label>Este pacote tem data de validade?</label>
+      <select id="pacoteTemValidade" onchange="atualizarCampoValidadePacote()">
+        <option value="nao">Não</option>
+        <option value="sim">Sim</option>
+      </select>
+
+      <div id="campoValidadePacote" style="display:none">
+        <label>Válido até</label>
+        <input type="date" id="validadePacote">
+      </div>
     </div>
 
     <button onclick="salvarAluno()">
@@ -489,6 +500,20 @@ function mostrarCamposCobranca() {
 }
 
 
+function atualizarCampoValidadePacote() {
+  const seletor = document.getElementById("pacoteTemValidade");
+  const campo = document.getElementById("campoValidadePacote");
+  if (!seletor || !campo) return;
+
+  campo.style.display = seletor.value === "sim" ? "block" : "none";
+}
+
+function pacoteExpirado(aluno, dataReferencia) {
+  if (!aluno || !aluno.validadePacote) return false;
+  const ref = dataReferencia || new Date().toISOString().slice(0, 10);
+  return ref > aluno.validadePacote;
+}
+
 function salvarAluno() {
 
   const nome =
@@ -507,6 +532,7 @@ function salvarAluno() {
   let valorMensal = 0;
   let quantidadePacote = 0;
   let valorPacote = 0;
+  let validadePacote = "";
 
   if (tipo === "sessao") {
     valorSessao =
@@ -531,6 +557,18 @@ function salvarAluno() {
     valorPacote =
       Number(document.getElementById("valorPacote").value);
 
+    const temValidade =
+      document.getElementById("pacoteTemValidade").value === "sim";
+
+    validadePacote = temValidade
+      ? document.getElementById("validadePacote").value
+      : "";
+
+    if (temValidade && !validadePacote) {
+      alert("Informe a data de validade do pacote.");
+      return;
+    }
+
     if (quantidadePacote > 0) {
       valorSessao =
         valorPacote / quantidadePacote;
@@ -545,7 +583,11 @@ function salvarAluno() {
     valorQuinzenal,
     valorMensal,
     quantidadePacote,
-    valorPacote
+    valorPacote,
+    validadePacote,
+    dataInicioPacote: tipo === "pacote"
+      ? new Date().toISOString().slice(0, 10)
+      : ""
   };
 
   alunos.push(aluno);
@@ -561,6 +603,9 @@ function salvarAluno() {
   document.getElementById("valorMensal").value = "";
   document.getElementById("quantidadePacote").value = "";
   document.getElementById("valorPacote").value = "";
+  document.getElementById("pacoteTemValidade").value = "nao";
+  document.getElementById("validadePacote").value = "";
+  atualizarCampoValidadePacote();
 
   document.getElementById("mensagemAluno").style.display =
     "block";
@@ -1515,7 +1560,7 @@ function renovarPacote(alunoId) {
   }
 
   if (aluno.proximoPacote) {
-    alert("Já existe um próximo pacote aguardando o término do pacote atual.");
+    alert("Já existe um próximo pacote aguardando.");
     return;
   }
 
@@ -1527,7 +1572,7 @@ function renovarPacote(alunoId) {
 
   const quantidade = Number(quantidadeDigitada);
   if (!Number.isInteger(quantidade) || quantidade <= 0) {
-    alert("Informe uma quantidade válida de sessões.");
+    alert("Informe uma quantidade válida.");
     return;
   }
 
@@ -1543,19 +1588,37 @@ function renovarPacote(alunoId) {
     return;
   }
 
+  const temValidade = confirm(
+    "O próximo pacote tem data de validade?\n\nOK = Sim\nCancelar = Não"
+  );
+
+  let validade = "";
+  if (temValidade) {
+    const digitada = prompt("Válido até (DD/MM/AAAA):", "");
+    if (digitada === null) return;
+
+    validade = converterDataBrasileiraParaISO(digitada);
+    if (!validade) {
+      alert("Informe uma data válida no formato DD/MM/AAAA.");
+      return;
+    }
+  }
+
   const pacoteId = Date.now();
 
   if (!confirm(
-    "Comprar próximo pacote?\n\n" +
+    "Registrar próximo pacote?\n\n" +
     quantidade + " sessões\n" +
     formatarDinheiro(valor) +
-    "\n\nAs sessões restantes do pacote atual serão usadas primeiro."
+    (validade ? "\nVálido até " + formatarData(validade) : "\nSem validade") +
+    "\n\nO pacote atual será usado primeiro enquanto ainda tiver saldo e estiver válido."
   )) return;
 
   aluno.proximoPacote = {
     id: pacoteId,
-    quantidade: quantidade,
-    valor: valor,
+    quantidade,
+    valor,
+    validade,
     dataCompra: new Date().toISOString().slice(0, 10)
   };
 
@@ -1565,19 +1628,18 @@ function renovarPacote(alunoId) {
     alunoNome: aluno.nome,
     tipo: "pacote",
     descricao: "Próximo pacote",
-    valor: valor,
+    valor,
     pagamento: "aberto",
     data: aluno.proximoPacote.dataCompra,
-    pacoteId: pacoteId,
+    pacoteId,
     quantidadeSessoes: quantidade
   });
 
   localStorage.setItem("alunos", JSON.stringify(alunos));
   localStorage.setItem("cobrancas", JSON.stringify(cobrancas));
-
   atualizarAlunos();
   atualizarResumo();
-  alert("Próximo pacote registrado. O saldo do pacote atual será usado primeiro.");
+  alert("Próximo pacote registrado.");
 }
 
 function obterSessoesConsumidasPacote(aluno, pacoteId) {
@@ -1594,17 +1656,29 @@ function obterSessoesConsumidasPacote(aluno, pacoteId) {
   }).length;
 }
 
-function ativarProximoPacoteSeNecessario(aluno) {
+function ativarProximoPacoteSeNecessario(aluno, dataReferencia) {
   if (!aluno || aluno.tipo !== "pacote" || !aluno.proximoPacote) return false;
 
   const quantidadeAtual = Number(aluno.quantidadePacote || 0);
   const usadasAtual = obterSessoesConsumidasPacote(aluno, aluno.pacoteAtualId || null);
-  if (usadasAtual < quantidadeAtual) return false;
+  const esgotado = usadasAtual >= quantidadeAtual;
+  const expirado = pacoteExpirado(aluno, dataReferencia);
+
+  if (!esgotado && !expirado) return false;
 
   if (!Array.isArray(aluno.historicoPacotes)) aluno.historicoPacotes = [];
 
   const resumo = obterResumoPacoteAtual(aluno);
-  if (resumo) aluno.historicoPacotes.push(resumo);
+  if (resumo) {
+    resumo.expiradas = expirado
+      ? Math.max(quantidadeAtual - usadasAtual, 0)
+      : 0;
+    resumo.motivoEncerramento = expirado ? "validade" : "esgotado";
+    resumo.dataFim = aluno.validadePacote && expirado
+      ? aluno.validadePacote
+      : (dataReferencia || new Date().toISOString().slice(0, 10));
+    aluno.historicoPacotes.push(resumo);
+  }
 
   const proximo = aluno.proximoPacote;
   aluno.quantidadePacote = Number(proximo.quantidade || 0);
@@ -1612,7 +1686,8 @@ function ativarProximoPacoteSeNecessario(aluno) {
   aluno.valorSessao = aluno.quantidadePacote > 0
     ? aluno.valorPacote / aluno.quantidadePacote : 0;
   aluno.pacoteAtualId = proximo.id;
-  aluno.dataInicioPacote = new Date().toISOString().slice(0, 10);
+  aluno.dataInicioPacote = dataReferencia || new Date().toISOString().slice(0, 10);
+  aluno.validadePacote = proximo.validade || "";
   aluno.proximoPacote = null;
 
   localStorage.setItem("alunos", JSON.stringify(alunos));
@@ -1637,6 +1712,7 @@ function proximoPacoteHtml(aluno) {
       "<div class='sessao-detalhe'>" +
         Number(p.quantidade || 0) + " sessões — " +
         formatarDinheiro(Number(p.valor || 0)) +
+        (p.validade ? "<br>Válido até " + formatarData(p.validade) : "<br>Sem validade") +
       "</div>" +
       "<span class='" + (pago ? "pago" : "aberto") + "'>" +
         (pago ? "Pago ✓" : "Em aberto") +
@@ -1796,7 +1872,11 @@ function historicoPacotesHtml(aluno) {
         "<div class='historico-item'>" +
         "<strong>Pacote anterior</strong><br>" +
         inicio + " a " + fim + "<br>" +
-        p.usadas + " de " + p.quantidade + " usadas<br>" +
+        p.usadas + " de " + p.quantidade + " usadas" +
+        (Number(p.expiradas || 0) > 0
+          ? " — " + Number(p.expiradas) + " expiradas"
+          : "") +
+        "<br>" +
         formatarDinheiro(Number(p.valor || 0)) + " — " +
         (pago ? "Pago" : "Em aberto") +
         "<button class='secondary small-button' onclick='alternarPagamentoPacoteHistorico(" +
@@ -2463,7 +2543,12 @@ function atualizarAlunos() {
         restantes +
         " de " +
         Number(aluno.quantidadePacote || 0) +
-        " sessões</div>";
+        " sessões</div>" +
+        "<div class='sessao-detalhe'>" +
+        (aluno.validadePacote
+          ? "Válido até: " + formatarData(aluno.validadePacote)
+          : "Sem validade") +
+        "</div>";
 
       if (!cobrancaPacote) {
 
@@ -3092,7 +3177,7 @@ function salvarSessao() {
   }
 
   if (aluno.tipo === "pacote") {
-    ativarProximoPacoteSeNecessario(aluno);
+    ativarProximoPacoteSeNecessario(aluno, data);
   }
 
   const sessao = {

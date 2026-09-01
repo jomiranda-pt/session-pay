@@ -533,6 +533,7 @@ function salvarAluno() {
   let quantidadePacote = 0;
   let valorPacote = 0;
   let validadePacote = "";
+  let pacoteAtualId = null;
 
   if (tipo === "sessao") {
     valorSessao =
@@ -550,6 +551,8 @@ function salvarAluno() {
   }
 
   if (tipo === "pacote") {
+
+    pacoteAtualId = Date.now() + Math.floor(Math.random() * 1000);
 
     quantidadePacote =
       Number(document.getElementById("quantidadePacote").value);
@@ -585,6 +588,7 @@ function salvarAluno() {
     quantidadePacote,
     valorPacote,
     validadePacote,
+    pacoteAtualId,
     dataInicioPacote: tipo === "pacote"
       ? new Date().toISOString().slice(0, 10)
       : ""
@@ -592,9 +596,29 @@ function salvarAluno() {
 
   alunos.push(aluno);
 
+  if (tipo === "pacote") {
+    cobrancas.push({
+      id: Date.now() + Math.floor(Math.random() * 1000),
+      alunoId: aluno.id,
+      alunoNome: aluno.nome,
+      tipo: "pacote",
+      descricao: "Pacote",
+      valor: Number(aluno.valorPacote || 0),
+      pagamento: "aberto",
+      data: aluno.dataInicioPacote,
+      pacoteId: aluno.pacoteAtualId,
+      quantidadeSessoes: Number(aluno.quantidadePacote || 0)
+    });
+  }
+
   localStorage.setItem(
     "alunos",
     JSON.stringify(alunos)
+  );
+
+  localStorage.setItem(
+    "cobrancas",
+    JSON.stringify(cobrancas)
   );
 
   document.getElementById("nomeAluno").value = "";
@@ -916,6 +940,35 @@ function marcarPacotePago(alunoId) {
     JSON.stringify(cobrancas)
   );
 
+  atualizarAlunos();
+  atualizarResumo();
+}
+
+
+function desfazerPacotePago(alunoId) {
+  const cobranca = obterCobrancaPacote(alunoId);
+  if (!cobranca) return;
+
+  if (!confirm("Desfazer o pagamento deste pacote?")) return;
+
+  cobranca.pagamento = "aberto";
+  localStorage.setItem("cobrancas", JSON.stringify(cobrancas));
+  atualizarAlunos();
+  atualizarResumo();
+}
+
+function apagarCobrancaPacote(alunoId) {
+  const cobranca = obterCobrancaPacote(alunoId);
+  if (!cobranca) return;
+
+  if (!confirm(
+    "Apagar esta cobrança de " +
+    formatarDinheiro(Number(cobranca.valor || 0)) +
+    "?\\n\\nEsta ação não apaga o aluno nem as sessões."
+  )) return;
+
+  cobrancas = cobrancas.filter(c => Number(c.id) !== Number(cobranca.id));
+  localStorage.setItem("cobrancas", JSON.stringify(cobrancas));
   atualizarAlunos();
   atualizarResumo();
 }
@@ -2553,15 +2606,7 @@ function atualizarAlunos() {
       if (!cobrancaPacote) {
 
         financeiroPacote +=
-          "<span class='aberto'>Pagamento ainda não lançado</span>" +
-
-          "<button class='small-button' " +
-          "onclick='registrarCobrancaPacote(" +
-          aluno.id +
-          ")'>" +
-          "Lançar " +
-          formatarDinheiro(aluno.valorPacote) +
-          "</button>";
+          "<span class='sessao-detalhe'>Cobrança apagada</span>";
 
       } else if (
         cobrancaPacote.pagamento === "pago"
@@ -2570,7 +2615,11 @@ function atualizarAlunos() {
         financeiroPacote +=
           "<span class='pago'>" +
           formatarDinheiro(cobrancaPacote.valor) +
-          " — Pago ✓</span>";
+          " — Pago ✓</span>" +
+          "<button class='secondary small-button' onclick='desfazerPacotePago(" +
+          aluno.id + ")'>Desfazer pagamento</button>" +
+          "<button class='secondary small-button' onclick='apagarCobrancaPacote(" +
+          aluno.id + ")'>Apagar cobrança</button>";
 
       } else {
 
@@ -2578,13 +2627,10 @@ function atualizarAlunos() {
           "<span class='aberto'>" +
           formatarDinheiro(cobrancaPacote.valor) +
           " — Em aberto</span>" +
-
-          "<button class='small-button' " +
-          "onclick='marcarPacotePago(" +
-          aluno.id +
-          ")'>" +
-          "Marcar como pago" +
-          "</button>";
+          "<button class='small-button' onclick='marcarPacotePago(" +
+          aluno.id + ")'>Marcar como pago</button>" +
+          "<button class='secondary small-button' onclick='apagarCobrancaPacote(" +
+          aluno.id + ")'>Apagar cobrança</button>";
       }
 
       if (restantes === 0) {

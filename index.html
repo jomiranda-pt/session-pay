@@ -1638,34 +1638,87 @@ function obterResumoPacoteAtual(aluno) {
 }
 
 
+function obterCobrancaPacoteHistorico(alunoId, pacote) {
+  const lista = cobrancas.filter(c =>
+    Number(c.alunoId) === Number(alunoId) && c.tipo === "pacote"
+  );
+
+  if (pacote.id) {
+    const exata = lista.find(c =>
+      c.pacoteId && Number(c.pacoteId) === Number(pacote.id)
+    );
+    if (exata) return exata;
+  }
+
+  return lista.find(c =>
+    Number(c.valor || 0) === Number(pacote.valor || 0)
+  );
+}
+
+function alternarPagamentoPacoteHistorico(alunoId, pacoteId) {
+  const aluno = alunos.find(a => Number(a.id) === Number(alunoId));
+  if (!aluno || !Array.isArray(aluno.historicoPacotes)) return;
+
+  const pacote = aluno.historicoPacotes.find(
+    p => Number(p.id) === Number(pacoteId)
+  );
+  if (!pacote) return;
+
+  const cobranca = obterCobrancaPacoteHistorico(alunoId, pacote);
+  if (!cobranca) {
+    alert("Não foi possível localizar a cobrança deste pacote.");
+    return;
+  }
+
+  const pago = cobranca.pagamento === "pago";
+  if (!confirm(
+    pago
+      ? "Desfazer o pagamento deste pacote anterior?"
+      : "Marcar este pacote anterior como pago?"
+  )) return;
+
+  cobranca.pagamento = pago ? "aberto" : "pago";
+  pacote.pagamento = cobranca.pagamento;
+
+  localStorage.setItem("cobrancas", JSON.stringify(cobrancas));
+  localStorage.setItem("alunos", JSON.stringify(alunos));
+  atualizarAlunos();
+  atualizarResumo();
+}
+
 function historicoPacotesHtml(aluno) {
   const historico = Array.isArray(aluno.historicoPacotes)
-    ? aluno.historicoPacotes
-    : [];
+    ? aluno.historicoPacotes : [];
 
   if (!historico.length) return "";
 
   return (
     "<div class='quinzena-box'>" +
-      "<strong>Histórico de pacotes</strong>" +
-      historico.slice().reverse().map(p => {
-        const inicio = p.dataInicio ? formatarData(p.dataInicio) : "—";
-        const fim = p.dataFim ? formatarData(p.dataFim) : "—";
+    "<strong>Histórico de pacotes</strong>" +
+    historico.slice().reverse().map(p => {
+      const inicio = p.dataInicio ? formatarData(p.dataInicio) : "—";
+      const fim = p.dataFim ? formatarData(p.dataFim) : "—";
+      const cobranca = obterCobrancaPacoteHistorico(aluno.id, p);
+      const pagamento = cobranca ? cobranca.pagamento : (p.pagamento || "aberto");
+      const pago = pagamento === "pago";
 
-        return (
-          "<div class='historico-item'>" +
-            "<strong>Pacote anterior</strong><br>" +
-            inicio + " a " + fim + "<br>" +
-            p.usadas + " de " + p.quantidade + " usadas<br>" +
-            formatarDinheiro(Number(p.valor || 0)) + " — " +
-            (p.pagamento === "pago" ? "Pago" : "Em aberto") +
-          "</div>"
-        );
-      }).join("") +
+      return (
+        "<div class='historico-item'>" +
+        "<strong>Pacote anterior</strong><br>" +
+        inicio + " a " + fim + "<br>" +
+        p.usadas + " de " + p.quantidade + " usadas<br>" +
+        formatarDinheiro(Number(p.valor || 0)) + " — " +
+        (pago ? "Pago" : "Em aberto") +
+        "<button class='secondary small-button' onclick='alternarPagamentoPacoteHistorico(" +
+        aluno.id + "," + p.id + ")'>" +
+        (pago ? "Desfazer pagamento" : "Marcar como pago") +
+        "</button>" +
+        "</div>"
+      );
+    }).join("") +
     "</div>"
   );
 }
-
 
 function editarAluno(alunoId) {
   const aluno = alunos.find(

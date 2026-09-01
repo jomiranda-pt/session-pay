@@ -964,7 +964,7 @@ function apagarCobrancaPacote(alunoId) {
   if (!confirm(
     "Apagar esta cobrança de " +
     formatarDinheiro(Number(cobranca.valor || 0)) +
-    "?\\n\\nEsta ação não apaga o aluno nem as sessões."
+    "?\n\nEsta ação não apaga o aluno nem as sessões."
   )) return;
 
   cobrancas = cobrancas.filter(c => Number(c.id) !== Number(cobranca.id));
